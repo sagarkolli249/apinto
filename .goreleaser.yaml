@@ -1,0 +1,56 @@
+# .goreleaser.yml
+builds:
+  - id: apinto
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+      - loong64
+      - mips64le
+    goarm:
+      - "6"
+      - "7"
+    gomips:
+      - softfloat
+    goamd64:
+      - v2
+      - v3
+    targets:
+      - linux_arm64
+      - linux_amd64
+      - darwin_arm64
+      - darwin_amd64
+      - linux_loong64
+      - linux_mips64le
+    dir: ./app/apinto
+    main: .
+    binary: apinto
+    builder: go
+    gobinary: go
+#    ldflags:
+#      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser
+#      -
+    ldflags:
+      - -s -w
+      - -X "github.com/eolinker/apinto/utils/version.Version={{.Version}}"
+      - -X "github.com/eolinker/apinto/utils/version.gitCommit={{.Commit}}"
+      - -X "github.com/eolinker/apinto/utils/version.buildTime={{.Date}}"
+      - -X "github.com/eolinker/apinto/utils/version.buildUser=goreleaser"
+      - -X "github.com/eolinker/apinto/utils/version.goVersion={{.Env.GOVERSION}}"
+      - -X "github.com/eolinker/apinto/utils/version.eoscVersion={{.Env.EoscVersion}}"
+    env:
+      - CGO_ENABLED=0
+archives:
+  - id: default
+    format: tar.gz
+    wrap_in_directory: apinto
+    name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - src: 'build/resources/*'
+        dst: /
+        strip_parent: true
+release:
+  name_template: "{{ .Tag }}"
+  mode: append

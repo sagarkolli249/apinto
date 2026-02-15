@@ -114,16 +114,90 @@ func (c *Convert) RequestConvert(ctx eocontext.EoContext, extender map[string]in
 	systemMessage := make([]*Content, 0)
 	for _, m := range chatRequest.Config.Messages {
 		if m.Role == "system" {
-			systemMessage = append(systemMessage, &Content{Text: m.Content})
+			systemMessage = append(systemMessage, &Content{
+				Type: "text",
+				Text: m.Content,
+			})
+		} else if m.Role == "tool" {
+			// Convert OpenAI tool response to Bedrock toolResult format
+			// Tool results must be sent as user messages with toolResult content
+			var toolResult map[string]interface{}
+			if err := json.Unmarshal([]byte(m.Content), &toolResult); err != nil {
+				// If not JSON, wrap as plain text
+				toolResult = map[string]interface{}{"text": m.Content}
+			}
+
+			messages = append(messages, Message{
+				Role: "user",
+				Content: []*Content{
+					{
+						ToolResult: &ToolResultContent{
+							ToolUseId: m.ToolCallID,
+							Content: []map[string]interface{}{
+								{"json": toolResult},
+							},
+							Status: "success",
+						},
+					},
+				},
+			})
+		} else if m.Role == "assistant" && len(m.ToolCalls) > 0 {
+			// Convert assistant message with tool calls to Bedrock format
+			content := make([]*Content, 0)
+
+			// Add text content if present
+			if m.Content != "" {
+				content = append(content, &Content{
+					Type: "text",
+					Text: m.Content,
+				})
+			}
+
+			// Add tool use content
+			for _, tc := range m.ToolCalls {
+				var input map[string]interface{}
+				if err := json.Unmarshal([]byte(tc.Function.Arguments), &input); err != nil {
+					log.Errorf("Failed to unmarshal tool arguments: %v", err)
+					continue
+				}
+
+				content = append(content, &Content{
+					ToolUse: &ToolUseContent{
+						ToolUseId: tc.ID,
+						Name:      tc.Function.Name,
+						Input:     input,
+					},
+				})
+			}
+
+			messages = append(messages, Message{
+				Role:    "assistant",
+				Content: content,
+			})
 		} else {
 			messages = append(messages, Message{
-				Role:    m.Role,
-				Content: []*Content{{Text: m.Content}},
+				Role: m.Role,
+				Content: []*Content{
+					{
+						Type: "text",
+						Text: m.Content,
+					},
+				},
 			})
 		}
 	}
 	chatRequest.SetAppend("messages", messages)
 	chatRequest.SetAppend("system", systemMessage)
+
+	// Convert tools if present
+	if len(chatRequest.Config.Tools) > 0 {
+		toolConfig := convertOpenAIToolsToBedrock(chatRequest.Config.Tools)
+		if toolConfig != nil {
+			chatRequest.SetAppend("toolConfig", toolConfig)
+			log.Infof("Bedrock: Added %d tools to request", len(toolConfig.Tools))
+		}
+	}
+
 	path := fmt.Sprintf(currentPath, model)
 	if chatRequest.Config.Stream {
 		path = fmt.Sprintf(streamPath, model)

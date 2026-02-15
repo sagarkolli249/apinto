@@ -23,6 +23,10 @@ type Request struct {
 	Stream              bool     `json:"stream,omitempty"`
 	Stop                []string `json:"stop,omitempty"`
 	PresencePenalty     float32  `json:"presence_penalty,omitempty"`
+
+	// Tool calling support
+	Tools      []openai.Tool `json:"tools,omitempty"`
+	ToolChoice interface{}   `json:"tool_choice,omitempty"` // Can be string ("auto", "none") or object
 }
 
 // Response 定义客户端统一输出响应格式
