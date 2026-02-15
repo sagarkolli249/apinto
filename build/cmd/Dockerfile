@@ -32,8 +32,9 @@ RUN cp /${AppName}/${AppName}.yml.tpl /etc/${AppName}/${AppName}.yml && cp /${Ap
 
 RUN chmod 755 /${AppName}/*.sh
 
-# Change ownership to non-root user
-RUN chown -R ${AppName}:${AppName} /${AppName} /etc/${AppName} /var/lib/${AppName}
+# Create volume directory and change ownership to non-root user
+RUN mkdir -p /var/lib/${AppName} && \
+    chown -R ${AppName}:${AppName} /${AppName} /etc/${AppName} /var/lib/${AppName}
 
 # Switch to non-root user
 USER ${AppName}
