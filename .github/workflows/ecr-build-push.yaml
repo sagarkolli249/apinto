@@ -10,8 +10,10 @@ on:
       - main
 
 env:
-  AWS_REGION: us-east-1  # Change this to your AWS region
-  ECR_REPOSITORY: apinto-gateway  # Change this to your ECR repository name
+  AWS_REGION: us-east-1
+  ECR_PRIVATE_REPOSITORY: apipark/apinto  # Private ECR repository
+  ECR_PUBLIC_REPOSITORY: apinto  # Public ECR repository
+  PUBLIC_REGISTRY_ALIAS: e5v3y2z9  # Your public ECR registry alias
 
 jobs:
   # Semantic versioning job - determines the next version
@@ -128,97 +130,104 @@ jobs:
           PackageName=apinto_${VERSION}_linux_${ARCH}.tar.gz
           cp out/${PackageName} ./build/resources/apinto.linux.x64.tar.gz
 
-      - name: Build and push Docker image
+      - name: Login to Amazon ECR Public
+        id: login-ecr-public
+        run: |
+          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/${{ env.PUBLIC_REGISTRY_ALIAS }}
+
+      - name: Build and push Docker images
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_PRIVATE_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_PUBLIC_REGISTRY: public.ecr.aws/${{ env.PUBLIC_REGISTRY_ALIAS }}
           VERSION: ${{ needs.semantic-version.outputs.version }}
           ARCH: ${{ matrix.arch }}
         run: |
           PLATFORM="linux/$ARCH"
-          IMAGE_TAG="${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-${ARCH}"
 
+          # Private ECR image tags
+          PRIVATE_IMAGE_VERSIONED="${ECR_PRIVATE_REGISTRY}/${{ env.ECR_PRIVATE_REPOSITORY }}:${VERSION}-${ARCH}"
+          PRIVATE_IMAGE_LATEST="${ECR_PRIVATE_REGISTRY}/${{ env.ECR_PRIVATE_REPOSITORY }}:latest-${ARCH}"
+
+          # Public ECR image tags
+          PUBLIC_IMAGE_VERSIONED="${ECR_PUBLIC_REGISTRY}/${{ env.ECR_PUBLIC_REPOSITORY }}:${VERSION}-${ARCH}"
+          PUBLIC_IMAGE_LATEST="${ECR_PUBLIC_REGISTRY}/${{ env.ECR_PUBLIC_REPOSITORY }}:latest-${ARCH}"
+
+          # Build image
           docker build \
             --platform=${PLATFORM} \
-            -t ${IMAGE_TAG} \
+            -t ${PRIVATE_IMAGE_VERSIONED} \
+            -t ${PRIVATE_IMAGE_LATEST} \
+            -t ${PUBLIC_IMAGE_VERSIONED} \
+            -t ${PUBLIC_IMAGE_LATEST} \
             -f ./build/cmd/Dockerfile \
             ./build/resources
 
-          docker push ${IMAGE_TAG}
+          # Push to private ECR
+          docker push ${PRIVATE_IMAGE_VERSIONED}
+          docker push ${PRIVATE_IMAGE_LATEST}
+          echo "✅ Pushed to private ECR: ${PRIVATE_IMAGE_VERSIONED}"
+          echo "✅ Pushed to private ECR: ${PRIVATE_IMAGE_LATEST}"
 
-          echo "Pushed: ${IMAGE_TAG}"
+          # Push to public ECR
+          docker push ${PUBLIC_IMAGE_VERSIONED}
+          docker push ${PUBLIC_IMAGE_LATEST}
+          echo "✅ Pushed to public ECR: ${PUBLIC_IMAGE_VERSIONED}"
+          echo "✅ Pushed to public ECR: ${PUBLIC_IMAGE_LATEST}"
 
       - name: Cleanup
         run: |
           rm -rf ./build/resources/apinto.linux.x64.tar.gz
 
-  # Create multi-arch manifest
-  create-manifest:
-    name: Create Multi-Arch Manifest
-    runs-on: ubuntu-latest
-    needs: [semantic-version, build-and-push]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Create and push multi-arch manifest
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          VERSION: ${{ needs.semantic-version.outputs.version }}
-        run: |
-          # Create manifest for version tag
-          docker manifest create \
-            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION} \
-            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-amd64 \
-            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-arm64
-
-          docker manifest annotate \
-            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION} \
-            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-amd64 \
-            --os linux --arch amd64
-
-          docker manifest annotate \
-            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION} \
-            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-arm64 \
-            --os linux --arch arm64
-
-          docker manifest push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}
-
-          # Create manifest for latest tag
-          docker manifest create \
-            ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest \
-            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-amd64 \
-            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-arm64
-
-          docker manifest annotate \
-            ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest \
-            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-amd64 \
-            --os linux --arch amd64
-
-          docker manifest annotate \
-            ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest \
-            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-arm64 \
-            --os linux --arch arm64
-
-          docker manifest push ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
-
-          echo "✅ Multi-arch manifests created and pushed:"
-          echo "   - ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}"
-          echo "   - ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
+  # Create multi-arch manifest (disabled - images already tagged with latest)
+  # Uncomment and update if you need unified multi-arch manifests
+  # create-manifest:
+  #   name: Create Multi-Arch Manifest
+  #   runs-on: ubuntu-latest
+  #   needs: [semantic-version, build-and-push]
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #   steps:
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ${{ env.AWS_REGION }}
+  #
+  #     - name: Login to Amazon ECR
+  #       id: login-ecr
+  #       uses: aws-actions/amazon-ecr-login@v2
+  #
+  #     - name: Login to Amazon ECR Public
+  #       run: |
+  #         aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/${{ env.PUBLIC_REGISTRY_ALIAS }}
+  #
+  #     - name: Create and push multi-arch manifests
+  #       env:
+  #         ECR_PRIVATE_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+  #         ECR_PUBLIC_REGISTRY: public.ecr.aws/${{ env.PUBLIC_REGISTRY_ALIAS }}
+  #         VERSION: ${{ needs.semantic-version.outputs.version }}
+  #       run: |
+  #         # Create manifests for private ECR
+  #         docker manifest create \
+  #           ${ECR_PRIVATE_REGISTRY}/${{ env.ECR_PRIVATE_REPOSITORY }}:${VERSION} \
+  #           ${ECR_PRIVATE_REGISTRY}/${{ env.ECR_PRIVATE_REPOSITORY }}:${VERSION}-amd64 \
+  #           ${ECR_PRIVATE_REGISTRY}/${{ env.ECR_PRIVATE_REPOSITORY }}:${VERSION}-arm64
+  #
+  #         docker manifest push ${ECR_PRIVATE_REGISTRY}/${{ env.ECR_PRIVATE_REPOSITORY }}:${VERSION}
+  #
+  #         # Create manifests for public ECR
+  #         docker manifest create \
+  #           ${ECR_PUBLIC_REGISTRY}/${{ env.ECR_PUBLIC_REPOSITORY }}:${VERSION} \
+  #           ${ECR_PUBLIC_REGISTRY}/${{ env.ECR_PUBLIC_REPOSITORY }}:${VERSION}-amd64 \
+  #           ${ECR_PUBLIC_REGISTRY}/${{ env.ECR_PUBLIC_REPOSITORY }}:${VERSION}-arm64
+  #
+  #         docker manifest push ${ECR_PUBLIC_REGISTRY}/${{ env.ECR_PUBLIC_REPOSITORY }}:${VERSION}
 
   # Release with semantic versioning
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [semantic-version, create-manifest]
+    needs: [semantic-version, build-and-push]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.semantic-version.outputs.should_release == 'true'
     steps:
       - name: Checkout

@@ -7,13 +7,15 @@ set -e
 
 # Configuration
 AWS_REGION="${1:-us-east-1}"
-ECR_REPOSITORY="${2:-apinto-gateway}"
+ECR_PRIVATE_REPOSITORY="${2:-apipark/apinto}"
+ECR_PUBLIC_REPOSITORY="${3:-apinto}"
 
 echo "========================================"
 echo "ECR Build Verification Script"
 echo "========================================"
 echo "AWS Region: $AWS_REGION"
-echo "ECR Repository: $ECR_REPOSITORY"
+echo "Private ECR Repository: $ECR_PRIVATE_REPOSITORY"
+echo "Public ECR Repository: $ECR_PUBLIC_REPOSITORY"
 echo ""
 
 # Check AWS CLI installation
@@ -42,15 +44,25 @@ echo "AWS Account ID: $ACCOUNT_ID"
 
 # Check if ECR repository exists
 echo ""
-echo "Checking if ECR repository exists..."
-if aws ecr describe-repositories --repository-names "$ECR_REPOSITORY" --region "$AWS_REGION" &> /dev/null; then
-    echo "✅ ECR repository '$ECR_REPOSITORY' exists"
+echo "Checking if Private ECR repository exists..."
+if aws ecr describe-repositories --repository-names "$ECR_PRIVATE_REPOSITORY" --region "$AWS_REGION" &> /dev/null; then
+    echo "✅ Private ECR repository '$ECR_PRIVATE_REPOSITORY' exists"
 else
-    echo "❌ ECR repository '$ECR_REPOSITORY' does not exist"
+    echo "❌ Private ECR repository '$ECR_PRIVATE_REPOSITORY' does not exist"
     echo ""
     echo "Create it with:"
-    echo "  aws ecr create-repository --repository-name $ECR_REPOSITORY --region $AWS_REGION"
+    echo "  aws ecr create-repository --repository-name $ECR_PRIVATE_REPOSITORY --region $AWS_REGION"
     exit 1
+fi
+
+echo ""
+echo "Checking if Public ECR repository exists..."
+if aws ecr-public describe-repositories --repository-names "$ECR_PUBLIC_REPOSITORY" --region us-east-1 &> /dev/null; then
+    echo "✅ Public ECR repository '$ECR_PUBLIC_REPOSITORY' exists"
+    PUBLIC_REGISTRY_URI=$(aws ecr-public describe-repositories --repository-names "$ECR_PUBLIC_REPOSITORY" --region us-east-1 --query 'repositories[0].repositoryUri' --output text)
+    echo "   URI: $PUBLIC_REGISTRY_URI"
+else
+    echo "⚠️  Public ECR repository '$ECR_PUBLIC_REPOSITORY' not found (optional)"
 fi
 
 # List images in ECR
@@ -60,7 +72,7 @@ echo "Images in ECR Repository"
 echo "========================================"
 
 IMAGES=$(aws ecr describe-images \
-    --repository-name "$ECR_REPOSITORY" \
+    --repository-name "$ECR_PRIVATE_REPOSITORY" \
     --region "$AWS_REGION" \
     --query 'sort_by(imageDetails,& imagePushedAt)[-10:].[imageTags[0],imagePushedAt,imageSizeInBytes]' \
     --output table 2>/dev/null || echo "")
@@ -80,7 +92,7 @@ else
 
     # Get the latest image tag
     LATEST_TAG=$(aws ecr describe-images \
-        --repository-name "$ECR_REPOSITORY" \
+        --repository-name "$ECR_PRIVATE_REPOSITORY" \
         --region "$AWS_REGION" \
         --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]' \
         --output text 2>/dev/null || echo "")
@@ -94,7 +106,7 @@ else
         echo "Checking for multi-arch support..."
         for arch in amd64 arm64; do
             if aws ecr describe-images \
-                --repository-name "$ECR_REPOSITORY" \
+                --repository-name "$ECR_PRIVATE_REPOSITORY" \
                 --region "$AWS_REGION" \
                 --image-ids imageTag="${LATEST_TAG}-${arch}" \
                 &> /dev/null; then
@@ -122,7 +134,7 @@ echo "========================================"
 echo "Next Steps"
 echo "========================================"
 echo "1. Test deployment:"
-echo "   ./scripts/test-deployment.sh $AWS_REGION $ECR_REPOSITORY"
+echo "   ./scripts/test-deployment.sh $AWS_REGION $ECR_PRIVATE_REPOSITORY"
 echo ""
 echo "2. Pull image locally:"
 echo "   aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"

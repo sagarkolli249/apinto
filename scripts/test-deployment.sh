@@ -7,14 +7,14 @@ set -e
 
 # Configuration
 AWS_REGION="${1:-us-east-1}"
-ECR_REPOSITORY="${2:-apinto-gateway}"
-TAG="${3:-latest}"
+ECR_PRIVATE_REPOSITORY="${2:-apipark/apinto}"
+TAG="${3:-latest-amd64}"
 
 echo "========================================"
 echo "Apinto Test Deployment Script"
 echo "========================================"
 echo "AWS Region: $AWS_REGION"
-echo "ECR Repository: $ECR_REPOSITORY"
+echo "ECR Repository: $ECR_PRIVATE_REPOSITORY"
 echo "Tag: $TAG"
 echo ""
 
@@ -37,7 +37,7 @@ echo "✅ AWS CLI is installed"
 
 # Get AWS account ID
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-IMAGE_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${TAG}"
+IMAGE_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_PRIVATE_REPOSITORY}:${TAG}"
 
 echo ""
 echo "Image URI: $IMAGE_URI"

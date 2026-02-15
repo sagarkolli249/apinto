@@ -7,7 +7,9 @@ set -e
 
 # Configuration
 ECR_REGISTRY="865783518572.dkr.ecr.us-east-1.amazonaws.com"
-ECR_REPOSITORY="apinto-gateway"
+ECR_PRIVATE_REPOSITORY="apipark/apinto"
+ECR_PUBLIC_REPOSITORY="apinto"
+PUBLIC_REGISTRY="public.ecr.aws/e5v3y2z9"
 AWS_REGION="us-east-1"
 NAMESPACE="apinto-gateway"
 SECRET_NAME="ecr-secret"
@@ -68,17 +70,23 @@ ARCH=$(kubectl get nodes -o jsonpath='{.items[0].status.nodeInfo.architecture}')
 echo "Architecture: $ARCH"
 
 if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]; then
-    echo "✅ Nodes are amd64 - use 0.1.0-amd64 image"
-    RECOMMENDED_IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:0.1.0-amd64"
+    echo "✅ Nodes are amd64 - use latest-amd64 image"
+    RECOMMENDED_IMAGE_PRIVATE="${ECR_REGISTRY}/${ECR_PRIVATE_REPOSITORY}:latest-amd64"
+    RECOMMENDED_IMAGE_PUBLIC="${PUBLIC_REGISTRY}/${ECR_PUBLIC_REPOSITORY}:latest-amd64"
 elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
-    echo "✅ Nodes are arm64 - use 0.1.0-arm64 image"
-    RECOMMENDED_IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:0.1.0-arm64"
+    echo "✅ Nodes are arm64 - use latest-arm64 image"
+    RECOMMENDED_IMAGE_PRIVATE="${ECR_REGISTRY}/${ECR_PRIVATE_REPOSITORY}:latest-arm64"
+    RECOMMENDED_IMAGE_PUBLIC="${PUBLIC_REGISTRY}/${ECR_PUBLIC_REPOSITORY}:latest-arm64"
 else
     echo "⚠️  Unknown architecture: $ARCH"
-    RECOMMENDED_IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:0.1.0-amd64"
+    RECOMMENDED_IMAGE_PRIVATE="${ECR_REGISTRY}/${ECR_PRIVATE_REPOSITORY}:latest-amd64"
+    RECOMMENDED_IMAGE_PUBLIC="${PUBLIC_REGISTRY}/${ECR_PUBLIC_REPOSITORY}:latest-amd64"
 fi
 
-echo "Recommended image: $RECOMMENDED_IMAGE"
+echo ""
+echo "Recommended images:"
+echo "  Private ECR: $RECOMMENDED_IMAGE_PRIVATE"
+echo "  Public ECR:  $RECOMMENDED_IMAGE_PUBLIC (no auth required)"
 
 # Create namespace if it doesn't exist
 echo ""
@@ -194,7 +202,7 @@ spec:
   - name: $SECRET_NAME
   containers:
   - name: test
-    image: $RECOMMENDED_IMAGE
+    image: $RECOMMENDED_IMAGE_PRIVATE
     command: ["/bin/sh", "-c", "echo 'ECR pull successful!' && sleep 10"]
   restartPolicy: Never
 EOF
@@ -226,18 +234,23 @@ echo "========================================"
 echo ""
 echo "Image pull secret created: $SECRET_NAME"
 echo "Namespace: $NAMESPACE"
-echo "Recommended image: $RECOMMENDED_IMAGE"
+echo ""
+echo "Recommended images:"
+echo "  Private ECR: $RECOMMENDED_IMAGE_PRIVATE"
+echo "  Public ECR:  $RECOMMENDED_IMAGE_PUBLIC (no auth required)"
 echo ""
 echo "⚠️  IMPORTANT: ECR tokens expire after 12 hours!"
 echo ""
 echo "For production, set up automatic token refresh:"
 echo "1. Use IAM roles (recommended for EKS)"
 echo "2. Use a CronJob to refresh the secret periodically"
+echo "3. Or use Public ECR (no authentication needed)"
 echo ""
 echo "Next steps:"
 echo "1. Update k8s/deployment.yaml with:"
-echo "   - image: $RECOMMENDED_IMAGE"
-echo "   - imagePullSecrets: [name: $SECRET_NAME]"
+echo "   - For private: image: $RECOMMENDED_IMAGE_PRIVATE"
+echo "   - For public:  image: $RECOMMENDED_IMAGE_PUBLIC"
+echo "   - imagePullSecrets: [name: $SECRET_NAME] (only needed for private)"
 echo ""
 echo "2. Deploy:"
 echo "   kubectl apply -f k8s/deployment.yaml"
