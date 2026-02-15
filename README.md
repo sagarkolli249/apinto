@@ -103,8 +103,8 @@ Apinto 提供多架构容器镜像，支持 amd64 和 arm64 平台，通过自�
 
 **私有 ECR (Private ECR):**
 ```bash
-# AMD64 (Intel/AMD)
-docker pull 865783518572.dkr.ecr.us-east-1.amazonaws.com/apipark/apinto:latest-amd64
+# Default (AMD64 - Intel/AMD)
+docker pull 865783518572.dkr.ecr.us-east-1.amazonaws.com/apipark/apinto:latest
 
 # ARM64 (Graviton/ARM)
 docker pull 865783518572.dkr.ecr.us-east-1.amazonaws.com/apipark/apinto:latest-arm64
@@ -112,8 +112,8 @@ docker pull 865783518572.dkr.ecr.us-east-1.amazonaws.com/apipark/apinto:latest-a
 
 **公共 ECR (Public ECR):**
 ```bash
-# AMD64 - No authentication required
-docker pull public.ecr.aws/e5v3y2z9/apinto:latest-amd64
+# Default (AMD64) - No authentication required
+docker pull public.ecr.aws/e5v3y2z9/apinto:latest
 
 # ARM64 - No authentication required
 docker pull public.ecr.aws/e5v3y2z9/apinto:latest-arm64
@@ -123,12 +123,12 @@ docker pull public.ecr.aws/e5v3y2z9/apinto:latest-arm64
 
 **Docker 部署:**
 ```bash
-# 使用公共镜像快速启动 (AMD64)
+# 使用公共镜像快速启动 (默认 AMD64)
 docker run -d \
     --name apinto \
     -p 8080:8080 \
     -v /var/lib/apinto:/var/lib/apinto \
-    public.ecr.aws/e5v3y2z9/apinto:latest-amd64
+    public.ecr.aws/e5v3y2z9/apinto:latest
 ```
 
 **Kubernetes 部署:**

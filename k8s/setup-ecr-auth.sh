@@ -70,17 +70,17 @@ ARCH=$(kubectl get nodes -o jsonpath='{.items[0].status.nodeInfo.architecture}')
 echo "Architecture: $ARCH"
 
 if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]; then
-    echo "✅ Nodes are amd64 - use latest-amd64 image"
-    RECOMMENDED_IMAGE_PRIVATE="${ECR_REGISTRY}/${ECR_PRIVATE_REPOSITORY}:latest-amd64"
-    RECOMMENDED_IMAGE_PUBLIC="${PUBLIC_REGISTRY}/${ECR_PUBLIC_REPOSITORY}:latest-amd64"
+    echo "✅ Nodes are amd64 - use latest image (default)"
+    RECOMMENDED_IMAGE_PRIVATE="${ECR_REGISTRY}/${ECR_PRIVATE_REPOSITORY}:latest"
+    RECOMMENDED_IMAGE_PUBLIC="${PUBLIC_REGISTRY}/${ECR_PUBLIC_REPOSITORY}:latest"
 elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
     echo "✅ Nodes are arm64 - use latest-arm64 image"
     RECOMMENDED_IMAGE_PRIVATE="${ECR_REGISTRY}/${ECR_PRIVATE_REPOSITORY}:latest-arm64"
     RECOMMENDED_IMAGE_PUBLIC="${PUBLIC_REGISTRY}/${ECR_PUBLIC_REPOSITORY}:latest-arm64"
 else
     echo "⚠️  Unknown architecture: $ARCH"
-    RECOMMENDED_IMAGE_PRIVATE="${ECR_REGISTRY}/${ECR_PRIVATE_REPOSITORY}:latest-amd64"
-    RECOMMENDED_IMAGE_PUBLIC="${PUBLIC_REGISTRY}/${ECR_PUBLIC_REPOSITORY}:latest-amd64"
+    RECOMMENDED_IMAGE_PRIVATE="${ECR_REGISTRY}/${ECR_PRIVATE_REPOSITORY}:latest"
+    RECOMMENDED_IMAGE_PUBLIC="${PUBLIC_REGISTRY}/${ECR_PUBLIC_REPOSITORY}:latest"
 fi
 
 echo ""

@@ -68,14 +68,14 @@ spec:
 
       containers:
       - name: apinto
-        # For amd64 architecture (most common) - Private ECR
-        image: 865783518572.dkr.ecr.us-east-1.amazonaws.com/apipark/apinto:latest-amd64
+        # Default image (amd64 architecture - most common) - Private ECR
+        image: 865783518572.dkr.ecr.us-east-1.amazonaws.com/apipark/apinto:latest
 
         # For arm64 architecture (use this instead if you have ARM nodes)
         # image: 865783518572.dkr.ecr.us-east-1.amazonaws.com/apipark/apinto:latest-arm64
 
         # Alternative: Public ECR (no authentication needed for public repos)
-        # image: public.ecr.aws/e5v3y2z9/apinto:latest-amd64
+        # image: public.ecr.aws/e5v3y2z9/apinto:latest
 
         imagePullPolicy: IfNotPresent
 

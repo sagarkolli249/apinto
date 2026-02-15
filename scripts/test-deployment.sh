@@ -8,7 +8,7 @@ set -e
 # Configuration
 AWS_REGION="${1:-us-east-1}"
 ECR_PRIVATE_REPOSITORY="${2:-apipark/apinto}"
-TAG="${3:-latest-amd64}"
+TAG="${3:-latest}"
 
 echo "========================================"
 echo "Apinto Test Deployment Script"

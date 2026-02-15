@@ -144,13 +144,20 @@ jobs:
         run: |
           PLATFORM="linux/$ARCH"
 
+          # Determine tag suffix: amd64 gets no suffix (default), arm64 gets -arm64
+          if [ "$ARCH" = "amd64" ]; then
+            TAG_SUFFIX=""
+          else
+            TAG_SUFFIX="-${ARCH}"
+          fi
+
           # Private ECR image tags
-          PRIVATE_IMAGE_VERSIONED="${ECR_PRIVATE_REGISTRY}/${{ env.ECR_PRIVATE_REPOSITORY }}:${VERSION}-${ARCH}"
-          PRIVATE_IMAGE_LATEST="${ECR_PRIVATE_REGISTRY}/${{ env.ECR_PRIVATE_REPOSITORY }}:latest-${ARCH}"
+          PRIVATE_IMAGE_VERSIONED="${ECR_PRIVATE_REGISTRY}/${{ env.ECR_PRIVATE_REPOSITORY }}:${VERSION}${TAG_SUFFIX}"
+          PRIVATE_IMAGE_LATEST="${ECR_PRIVATE_REGISTRY}/${{ env.ECR_PRIVATE_REPOSITORY }}:latest${TAG_SUFFIX}"
 
           # Public ECR image tags
-          PUBLIC_IMAGE_VERSIONED="${ECR_PUBLIC_REGISTRY}/${{ env.ECR_PUBLIC_REPOSITORY }}:${VERSION}-${ARCH}"
-          PUBLIC_IMAGE_LATEST="${ECR_PUBLIC_REGISTRY}/${{ env.ECR_PUBLIC_REPOSITORY }}:latest-${ARCH}"
+          PUBLIC_IMAGE_VERSIONED="${ECR_PUBLIC_REGISTRY}/${{ env.ECR_PUBLIC_REPOSITORY }}:${VERSION}${TAG_SUFFIX}"
+          PUBLIC_IMAGE_LATEST="${ECR_PUBLIC_REGISTRY}/${{ env.ECR_PUBLIC_REPOSITORY }}:latest${TAG_SUFFIX}"
 
           # Build image
           docker build \
