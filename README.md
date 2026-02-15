@@ -95,6 +95,70 @@ Apinto网关不受云平台限制，也能在Kubernetes运行。
 [![Star History Chart](https://api.star-history.com/svg?repos=eolinker/apinto&type=Date)](https://star-history.com/#eolinker/apinto&Date)
 
 
+## 容器镜像 / Container Images
+
+Apinto 提供多架构容器镜像，支持 amd64 和 arm64 平台，通过自动化 CI/CD 构建并发布。
+
+### 镜像仓库 / Image Registries
+
+**私有 ECR (Private ECR):**
+```bash
+# AMD64 (Intel/AMD)
+docker pull 865783518572.dkr.ecr.us-east-1.amazonaws.com/apipark/apinto:latest-amd64
+
+# ARM64 (Graviton/ARM)
+docker pull 865783518572.dkr.ecr.us-east-1.amazonaws.com/apipark/apinto:latest-arm64
+```
+
+**公共 ECR (Public ECR):**
+```bash
+# AMD64 - No authentication required
+docker pull public.ecr.aws/e5v3y2z9/apinto:latest-amd64
+
+# ARM64 - No authentication required
+docker pull public.ecr.aws/e5v3y2z9/apinto:latest-arm64
+```
+
+### 快速开始 / Quick Start
+
+**Docker 部署:**
+```bash
+# 使用公共镜像快速启动 (AMD64)
+docker run -d \
+    --name apinto \
+    -p 8080:8080 \
+    -v /var/lib/apinto:/var/lib/apinto \
+    public.ecr.aws/e5v3y2z9/apinto:latest-amd64
+```
+
+**Kubernetes 部署:**
+```bash
+# 克隆仓库
+git clone https://github.com/sagarkolli249/apinto.git
+cd apinto
+
+# 配置 ECR 认证（私有镜像）
+./k8s/setup-ecr-auth.sh
+
+# 部署到 Kubernetes
+kubectl apply -f k8s/deployment.yaml
+```
+
+### 自动化构建 / Automated Builds
+
+每次推送到 `main` 分支时，CI/CD 流水线自动：
+- 🔄 根据提交消息自动确定版本号（语义化版本）
+- 🏗️ 构建 AMD64 和 ARM64 架构镜像
+- 📦 同时推送到私有和公共 ECR 仓库
+- 🏷️ 使用版本号和 `latest` 标签
+
+**文档:**
+- [Kubernetes 部署指南](KUBERNETES_DEPLOYMENT_GUIDE.md)
+- [ECR CI/CD 配置](docs/ECR_CI_CD_SETUP.md)
+- [提交规范](docs/COMMIT_CONVENTIONS.md)
+
+---
+
 ## 基准测试
 
 
