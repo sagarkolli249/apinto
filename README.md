@@ -1,214 +1,177 @@
-<img width="1248" height="158" alt="img_v3_02ov_62863859-1c94-4bf5-a9fa-748ea978f5fg" src="https://github.com/user-attachments/assets/771d5b7a-1244-4add-83fd-90e0bd22ebfa" />
+## Apinto Gateway - Enhanced for AWS Bedrock
 
-# Apinto
+[![Go Report Card](https://goreportcard.com/badge/github.com/eolinker/apinto)](https://goreportcard.com/report/github.com/eolinker/apinto) [![Releases](https://img.shields.io/github/release/eolinker/apinto/all.svg?style=flat-square)](https://github.com/eolinker/apinto/releases) [![LICENSE](https://img.shields.io/github/license/eolinker/Apinto.svg?style=flat-square)](https://github.com/eolinker/apinto/blob/main/LICENSE)![](https://shields.io/github/downloads/eolinker/apinto/total)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/eolinker/apinto)](https://goreportcard.com/report/github.com/eolinker/apinto) [![Releases](https://img.shields.io/github/release/eolinker/apinto/all.svg?style=flat-square)](https://github.com/eolinker/apinto/releases) [![LICENSE](https://img.shields.io/github/license/eolinker/apinto.svg?style=flat-square)](https://github.com/eolinker/apinto/blob/main/LICENSE)![](https://shields.io/github/downloads/eolinker/apinto/total)
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT_CN.md)
+> **This is an enhanced fork** of the original [Apinto Gateway](https://github.com/eolinker/apinto) with additional support for AWS Bedrock tool calling and improved AI provider integrations.
 
-------------
-![](http://data.eolinker.com/course/eaC48Js3400ffd03c21e36b3eea434dce22d7877a3194f6.png)
+### What's New in This Fork
 
-**Apinto是一款高性能、可扩展、易维护的云原生API网关。**
+- **AWS Bedrock Tool Calling Support**: Full support for OpenAI-compatible tool calling (function calling) via AWS Bedrock
+  - Automatic conversion of OpenAI tool definitions to Bedrock format
+  - Support for tool result handling and multi-turn conversations
+  - Comprehensive test coverage for tool calling workflows
+- **Enhanced Message Handling**: Improved message format conversion between OpenAI and Bedrock APIs
+- **Production-Ready**: Includes comprehensive unit tests and benchmarks
+- **Kubernetes Deployment**: Enhanced Helm charts and deployment guides
 
-Apinto网关基于GO语言模块化开发，5分钟极速部署，配置简单、易于维护，支持集群与动态扩容，并且提供几十款网关插件和实用的企业级插件，让用户开箱即用。
+---
 
-## Demo 
-体验地址：[demo-dashboard.apinto.com](https://demo-dashboard.apinto.com/)
+## About Apinto
 
-提供了三个试用账号，避免被使用者挤下来
+Apinto is a high-performance microservice gateway developed in Golang. It provides HTTP API forwarding, multi-tenant management, API access control, and a powerful plugin system for enterprise API management.
 
-账号：apinto-1
+**Note**: The **main** branch is under active development. For stable releases, see [releases](https://github.com/sagarkolli249/apinto/releases).
 
-密码：12345678
+### Summary
 
-账号：apinto-2
+- [Why Apinto](#WhyApinto "Why Apinto")
+- [Feature](#Feature)
+- [Benchmark](#Benchmark)
+- [Deployment](#Deployment)
+- [GetStart](#GetStart "Get Start")
+- [Contact](#Contact)
+- [About](#About)
 
-密码：12345678
+### Why Apinto
 
-账号：apinto-3
+Apinto API gateway is a microservice gateway running on the service boundary of enterprise system. When you build websites, apps, iots and even open API transactions, Apinto API gateway can help you extract duplicate components from your internal system and run them on Apinto gateway, such as user authorization, access control, firewall, data conversion, etc; Moreover, Apinto provides the function of service arrangement, so that enterprises can quickly obtain the required data from various services and realize rapid response to business.
 
-密码：12345678
+Apinto API gateway has the following advantages:
 
-快速入门：https://help.apinto.com/docs/dashboard-v2/quick/quick_start.html
+- Completely open source: the Apinto project is initiated and maintained by eolinker for a long time. We hope to work with global developers to build the infrastructure of micro service ecology.
+- Excellent performance: under the same environment, Apinto is about 50% faster than nginx, Kong and other products, and its stability is also optimized.
+- Rich functions: Apinto provides all the functions of a standard gateway, and you can quickly connect your micro services and manage network traffic.
+- Extremely low use and maintenance cost: Apinto is an open source gateway developed in pure go language. It has no cumbersome deployment and no external product dependence. It only needs to download and run, which is extremely simple.
+- Good scalability: most of Apinto's functions are modular, so you can easily expand its capabilities.
 
-Apinto Dashboard github地址： https://github.com/eolinker/apinto-dashboard
+In a word, Apinto API gateway enables the business development team to focus more on business implementation.
 
-## Apinto功能架构图：
-<img width="1664" alt="img_v2_22590d84-f8a4-4d3a-9c67-b481ecfdf1fg" src="https://user-images.githubusercontent.com/18322454/228448223-515a7feb-0c65-496e-85bc-1581b7a89cfe.png">
-
-## Apinto亮点特性
- Apinto API 网关以出色的用户体验和适用于各种企业级业务场景的控制台为特色。控制台具有四大亮点功能：集群管理、应用管理、精细服务治理和企业插件，能够满足企业对 API 网关更高级场景化需求的要求。 
-### 集群管理
- Apinto 提供集群管理功能，可以一次性配置业务并将其发布到相应的集群。这解决了多集群维护多套业务配置的问题，显著提高了运维效率，并降低了繁杂配置时的事故率。
-![](http://data.eolinker.com/course/Cdkvdtkdcc50a65d3e5b068bae658c343d7b6a188730218.png)
-### 应用管理
- Apinto 网关推出应用管理概念，统一管理应用及其生命周期。作为业务通讯的发起者，应用贯穿整个调用链。Apinto 网关对应用请求的流量进行鉴权认证和服务治理，并对请求的流量进行监控告警，统计应用调用情况。
-### 精细化服务治理
-Apinto提出精细化流量管理方案，即所有调用方的请求流量都经过网关，通过对应用、API、上游服务、请求方式、IP、请求路径、应用自定义标签等组合条件筛选请求流量，执行限量、访问、熔断、灰度、缓存等策略规则，帮助企业快速、灵活地制定策略，以满足不同业务场景的需求，并全方位治理好服务。
-![](http://data.eolinker.com/course/zqIaYaa0ac1273511504a4bad96e0e78de56e8e12850677.png)
-### 企业插件
-Apinto网关即将推出企业插件模块，并且陆续提供业务型企业插件如：用户角色权限、监控告警、日志、API文档、开放平台、安全防护、数据分析、调用链、mock、在线调测、安全测试、国密、多协议等。支持用户自定义企业插件，支持独立部署。
-## Apinto功能
-Apinto网关可以作为业务流量的入口，可以对业务流量进行处理，如动态路由、负载均衡、服务发现、熔断降级、身份认证、监控与告警等。
-Apinto网关不受云平台限制，也能在Kubernetes运行。
-
-
-### 产品特性
-
-| 功能         | 描述                                                         |
-| ------------ | ------------------------------------------------------------ |
-| 集群     | 集群不限制网关节点，自由剔除或加入网关节点，主从网关节点具备无缝切换功能，提升网关高可用性 |
-| 动态路由     | 可通过设置location、query、header、host、method等参数匹配对应的服务 |
-| 服务发现     | 支持对接Eureka、Nacos、Consul                                |
-| 负载均衡     | 支持轮询权重算法                                             |
-| 用户鉴权     | 匿名、Basic、Apikey、JWT、AK/SK认证                          |
-| SSL证书      | 管理多个证书                                                 |
-| 访问域名     | 可为网关设置访问域名                                         |
-| 健康检查     | 支持对负载的节点进行健康检查，确保服务健壮性                 |
-| 协议         | HTTP/HTTPS、Webservice、Restful、gRPC、Dubbo2、SOAP                              |
-| 插件化       | 流程插件化，按需加载所需模块                                 |
-| OPEN API     | 支持使用open api配置网关                                     |
-| 日志         | 提供节点的运行日志，可根据日志设置的等级输出                 |
-| 多种日志输出 | 可将节点的请求日志输出到不同的日志接收器，如file、nsq、kafka等 |
-| Cli命令支持  | 通过Cli命令操控网关，插件安装、下载和网关的开启、关闭等操作均可使用一键命令操控 |
-| 黑白名单     | 支持多维度筛选流量，设置黑白名单IP，拦截非法IP                               |
-| 访问策略     | 支持多维度筛选流量，可针对应用、IP、应用与IP、应用与API、应用与上游等多维组合设置黑白名单                               |
-| 流量策略     | 支持多维度筛选流量，控制应用、应用与API、应用与上游之间的请求次数和请求报文大小限制                               |
-| 熔断策略     | 支持多维度筛选流量，熔断上游或API                               |
-| 灰度策略     | 支持多维度筛选流量，按百分比或高级规则灰度流量到目标节点                               |
-| 缓存策略     | 支持多维度筛选流量，缓存API响应内容                               |
-| 参数映射     | 将客户端的请求参数映射到转发请求中，可按需改变参数的位置及名称 |
-| 额外参数     | 转发请求时，额外加上后端验证参数，如apikey等                 |
-| 转发重写     | 支持对 `scheme`、`uri`、`host` 的重写，同时支持对转发请求的请求头部header的值进行新增或者删除 |
-| 流量镜像     | 线上流量或请求内容进行拷贝到镜像服务中                 |
-| MOCK     | 模拟web服务器端API的响应                 |
-| CORS     | 支持api请求跨域                |
-| 同步API     | 提供OpenAPI同步API文档，支持swagger3.0 json或yaml格式文件      |
-
-## 迭代计划
-![image](https://user-images.githubusercontent.com/18322454/226301243-d69a1a5e-22eb-48d4-8fd1-52ec1cf8237b.png)
-如果您是个人开发者，可基于API网关相关的业务场景开发有价值的网关插件或企业级插件，并且愿意分享给Apinto，您将会成为Apinto的杰出贡献者或得到一定的收益。
-如果您是企业，可基于Apinto网关开发企业级插件，成为Apinto的合作伙伴。
-
-### Star历史
+### Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=eolinker/apinto&type=Date)](https://star-history.com/#eolinker/apinto&Date)
 
 
-## 容器镜像 / Container Images
+### Feture
 
-Apinto 提供多架构容器镜像，支持 amd64 和 arm64 平台，通过自动化 CI/CD 构建并发布。
+| Feture                | Description                                                  |
+| --------------------- | ------------------------------------------------------------ |
+| Dynamic router        | Match the corresponding service by setting parameters such as location, query, header, host and method |
+| Service discovery     | Support such as Eureka, Nacos and Consul                     |
+| Load Balance          | Support polling weight algorithm                             |
+| Authentication        | Anonymous, basic, apikey, JWT, AK / SK authentication        |
+| SSL certificate       | Manage multiple certificates                                 |
+| Access Domain         | The access domain can be set for the gateway                 |
+| Health check          | Support health check of load nodes to ensure service robustness |
+| Protocol              | HTTP/HTTPS、Webservice                                       |
+| Plugin                | The process is plug-in, and the required modules are loaded on demand |
+| OPEN API              | Gateway configuration using open API is supported            |
+| Log                   | Provide the operation log of the node, and set the level output of the log |
+| Multiple log output   | The node's request log can be output to different log receivers, such as file, NSQ, Kafka,etc |
+| Cli                   | The gateway is controlled by cli command. The plug-in installation, download, opening and closing of the gateway can be controlled by one click command |
+| Black and white list  | Support setting black-and-white list IP to intercept illegal IP |
+| Parameter mapping     | Mapping the request parameters of the client to the forwarding request, you can change the location and name of the parameters as needed |
+| Additional parameters | When forwarding the request, add back-end verification parameters, such as apikey, etc |
+| Proxy rewrite         | It supports rewriting of 'scheme', 'URI', 'host', and adding or deleting the value of the request header of the forwarding request |
+| flow control          | Intercept abnormal traffic                                   |
 
-### 镜像仓库 / Image Registries
+#### RoadMap
 
-**私有 ECR (Private ECR):**
-```bash
-# Default (AMD64 - Intel/AMD)
-docker pull 865783518572.dkr.ecr.us-east-1.amazonaws.com/apipark/apinto:latest
+- **UI**： The gateway configuration can be operated through the UI interface, and different UI interfaces (Themes) can be customized by loading as required
+- **Multi protocol**：Support a variety of protocols, including but not limited to grpc, websocket, TCP / UDP and Dubbo
+- **Plugin Market**：Because Apinto mainly loads the required modules through plug-in loading, users can compile the required functions into plug-ins, or download and update the plug-ins developed by contributors from the plug-in market for one click installation
+- **Service Orchestration**：An orchestration API corresponds to multiple backends. The input parameters of backends support client input and parameter transfer between backends; The returned data of backend supports filtering, deleting, moving, renaming, unpacking and packaging of fields; The orchestration API can set the exception return when the orchestration call fails
+- **Monitor**：Capture the gateway request data and export it to Promethus and graphite for analysis
+- .....
 
-# ARM64 (Graviton/ARM)
-docker pull 865783518572.dkr.ecr.us-east-1.amazonaws.com/apipark/apinto:latest-arm64
-```
+#### RoadMap  for 2022
 
-**公共 ECR (Public ECR):**
-```bash
-# Default (AMD64) - No authentication required
-docker pull public.ecr.aws/e5v3y2z9/apinto:latest
+![roadmap_en](https://user-images.githubusercontent.com/14105999/170408557-478830d5-3725-4fbe-a6f6-0ff0dd91d90e.jpeg)
 
-# ARM64 - No authentication required
-docker pull public.ecr.aws/e5v3y2z9/apinto:latest-arm64
-```
 
-### 快速开始 / Quick Start
-
-**Docker 部署:**
-```bash
-# 使用公共镜像快速启动 (默认 AMD64)
-docker run -d \
-    --name apinto \
-    -p 8080:8080 \
-    -v /var/lib/apinto:/var/lib/apinto \
-    public.ecr.aws/e5v3y2z9/apinto:latest
-```
-
-**Kubernetes 部署:**
-```bash
-# 克隆仓库
-git clone https://github.com/sagarkolli249/apinto.git
-cd apinto
-
-# 配置 ECR 认证（私有镜像）
-./k8s/setup-ecr-auth.sh
-
-# 部署到 Kubernetes
-kubectl apply -f k8s/deployment.yaml
-```
-
-### 自动化构建 / Automated Builds
-
-每次推送到 `main` 分支时，CI/CD 流水线自动：
-- 🔄 根据提交消息自动确定版本号（语义化版本）
-- 🏗️ 构建 AMD64 和 ARM64 架构镜像
-- 📦 同时推送到私有和公共 ECR 仓库
-- 🏷️ 使用版本号和 `latest` 标签
-
-**文档:**
-- [Kubernetes 部署指南](KUBERNETES_DEPLOYMENT_GUIDE.md)
-- [ECR CI/CD 配置](docs/ECR_CI_CD_SETUP.md)
-- [提交规范](docs/COMMIT_CONVENTIONS.md)
-
----
-
-## 基准测试
-
+### Benchmark
 
 ![image](https://user-images.githubusercontent.com/25589530/149748340-dc544f79-a8f9-46f5-903d-a3af4fb8b16e.png)
 
-## 部署
 
-* 直接部署：[部署教程](https://help.apinto.com/docs/apinto/quick/arrange)
-* [快速入门教程](https://help.apinto.com/docs/dashboard-v2/quick/quick_start.html)
-* [源码编译教程](https://help.apinto.com/docs/apinto/quick/arrange)
-* [Docker部署](https://hub.docker.com/r/eolinker/apinto-gateway)
-* Kubernetes部署：后续支持
 
-## 启动
+### Deployment
 
-1.下载安装包并解压（此处以v0.12.1版本的安装包示例）
+* Direct Deployment：[Deployment Tutorial](https://help.apinto.com/docs/apinto/quick/arrange.html)
+* [Quick Start Tutorial](https://help.apinto.com/docs/apinto/quick/quick_course.html)
+* [Source Code Compilation Tutorial](https://help.apinto.com/docs/apinto/quick/arrange.html)
+* [Docker](https://hub.docker.com/r/eolinker/apinto-gateway)
+* Kubernetes：Follow up support
+
+### Get start
+
+1. Download and unzip the installation package (here is an example of the installation package of version v0.12.1)
 
 ```
 wget https://github.com/eolinker/apinto/releases/download/v0.12.1/apinto_v0.12.1_linux_amd64.tar.gz && tar -zxvf apinto_v0.12.1_linux_amd64.tar.gz && cd apinto
 ```
+Apinto supports running on the arm64 and amd64 architectures. 
 
-Apinto支持在arm64、amd64架构上运行。
+Please download the installation package of the corresponding architecture and system as required. [Click](https://github.com/eolinker/apinto/releases/) to jump to download the installation package.
 
-请根据需要下载对应架构及系统的安装包，安装包下载请[点击](https://github.com/eolinker/apinto/releases/)跳转
+2. Install the gateway:
 
-2. 安装网关：
 ```shell
-./install.sh install
-```
-执行该步骤将会生成配置文件`/etc/apinto/apinto.yml`和`/etc/apinto/config.yml`，可根据需要修改。
 
-3.启动网关：
+./install.sh install
+
+```
+
+Executing this step will generate configuration files'/etc/apinto/apinto. yml 'and'/etc/apinto/config. yml ', which can be modified as needed.
+
+3. Start gateway：
 
 ```
 apinto start
 ```
 
-### Bug 和需求反馈
-如果想要反馈 Bug、提供产品意见，可以创建一个 Github issue 联系我们，十分感谢！
+3.To configure the gateway through the visual interface, click [apinto dashboard](https://github.com/eolinker/apinto-dashboard)
 
-如果你希望和 Apinto 团队近距离交流，讨论产品使用技巧以及了解更多产品最新进展，欢迎加入以下渠道。
+### AWS Bedrock Enhancements
 
+This fork includes significant enhancements for AWS Bedrock integration:
 
-- ## **联系我们**
+#### Tool Calling Support
+- **OpenAI-Compatible Tool Definitions**: Pass OpenAI-style tool/function definitions
+- **Automatic Format Conversion**: Converts between OpenAI and Bedrock tool formats
+- **Tool Name Sanitization**: Ensures tool names comply with Bedrock requirements
+- **Multi-Turn Conversations**: Full support for tool use and tool result messages
 
+#### Implementation Details
+- `drivers/ai-provider/bedrock/bedrock.go`: Enhanced request conversion with tool support
+- `drivers/ai-provider/bedrock/message.go`: Improved message handling for tool calls
+- `drivers/ai-provider/bedrock/tools.go`: OpenAI to Bedrock tool conversion logic
+- Comprehensive test coverage in `*_test.go` files
 
-* **帮助文档**：[https://help.apinto.com](https://help.apinto.com/docs)
+### Container Images
 
-- **官网**：[https://www.apinto.com](https://www.apinto.com/)
-- **论坛**：[https://community.apinto.com](https://community.apinto.com/)
-- **微信群**：<img src="http://data.eolinker.com/course/2HdT4zd10b670318462bec90f0f390bef896c21cad66172.png" style="width:150px" />
+Pre-built container images are available on AWS ECR:
+- **Repository**: `public.ecr.aws/e5v3y2z9/apinto`
+- **Architectures**: amd64, arm64
+- **Latest**: `1.0.0`
 
+### Deployment
 
+See our enhanced deployment guides:
+- [Kubernetes Deployment Guide](./KUBERNETES_DEPLOYMENT_GUIDE.md)
+- [Quick Start with ECR](./QUICK_START.md)
+- [Build Verification](./BUILD_VERIFICATION_SUMMARY.md)
+- [ECR Migration](./ECR_MIGRATION_SUMMARY.md)
+
+### Contact & Resources
+
+- **Original Project**: [Eolinker Apinto](https://github.com/eolinker/apinto)
+- **Help Documentation**: [https://help.apinto.com](https://help.apinto.com/docs)
+- **Official Website**: [https://www.apinto.com](https://www.apinto.com)
+- **Community Forum**: [https://community.apinto.com](https://community.apinto.com)
+
+### About
+
+This enhanced version is maintained for enterprise use with AWS Bedrock. The original Apinto project is developed and maintained by [Eolink](https://www.eolink.com), a leading API management service provider.
+
+For questions about the Bedrock enhancements, please open an issue in this repository.
