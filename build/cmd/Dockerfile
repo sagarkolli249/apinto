@@ -18,15 +18,25 @@ ARG AppName=apinto
 #定义数据卷
 VOLUME /var/lib/${AppName}
 
+# Create non-root user and group
+RUN addgroup -g 1000 ${AppName} && \
+    adduser -D -u 1000 -G ${AppName} ${AppName}
+
 #解压网关程序压缩包
 COPY ./apinto.linux.x64.tar.gz /
 RUN tar -zxvf apinto.linux.x64.tar.gz && ls /${AppName} / && rm -rf ../apinto.linux.x64.tar.gz
 
 #复制程序默认配置文件以及修改脚本权限
-RUN mkdir /etc/${AppName}
+RUN mkdir -p /etc/${AppName}
 RUN cp /${AppName}/${AppName}.yml.tpl /etc/${AppName}/${AppName}.yml && cp /${AppName}/config.yml.tpl /etc/${AppName}/config.yml
 
-RUN chmod 777 /${AppName}/*.sh
+RUN chmod 755 /${AppName}/*.sh
+
+# Change ownership to non-root user
+RUN chown -R ${AppName}:${AppName} /${AppName} /etc/${AppName} /var/lib/${AppName}
+
+# Switch to non-root user
+USER ${AppName}
 
 WORKDIR /apinto
 

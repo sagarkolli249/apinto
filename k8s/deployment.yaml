@@ -79,6 +79,17 @@ spec:
 
         imagePullPolicy: IfNotPresent
 
+        # Container security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+
         ports:
         - name: http
           containerPort: 8080
@@ -134,10 +145,14 @@ spec:
         configMap:
           name: apinto-config
 
-      # Security context
+      # Security context - running as non-root user
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
         fsGroup: 1000
-        runAsNonRoot: false  # Apinto might need root, adjust as needed
+        seccompProfile:
+          type: RuntimeDefault
 ---
 apiVersion: v1
 kind: Service
