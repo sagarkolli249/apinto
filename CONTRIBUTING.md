@@ -33,3 +33,101 @@ You are also encouraged to participate in the projects in the following ways:
 - Submit valuable issues
 - Report or fix known and unknown bugs
 - Write articles about source code analysis and usage cases for a project.
+
+---
+
+## Development Guidelines
+
+### Getting Started
+
+1. **Fork the repository** on GitHub
+2. **Clone your fork** locally:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/apinto.git
+   cd apinto
+   ```
+
+3. **Add upstream remote**:
+   ```bash
+   git remote add upstream https://github.com/sagarkolli249/apinto.git
+   ```
+
+4. **Create a branch** for your changes:
+   ```bash
+   git checkout -b feat/your-feature-name
+   ```
+
+### Development Setup
+
+**Prerequisites:**
+- Go 1.23.6 or later
+- Docker (for building images)
+- Make (optional)
+
+**Install Dependencies:**
+```bash
+go mod download
+go mod tidy
+```
+
+**Build Locally:**
+```bash
+# Build for current platform
+./build/cmd/build.sh
+
+# Build Docker image
+./build/cmd/docker_build.sh 0.0.0-dev username amd64
+```
+
+### Commit Message Conventions
+
+This project uses **Conventional Commits** for automatic semantic versioning.
+
+**Format:**
+```
+<type>(<scope>): <subject>
+```
+
+**Examples:**
+```bash
+feat(bedrock): add streaming support
+fix(cache): resolve memory leak
+docs: update README
+```
+
+For detailed guidelines, see [docs/COMMIT_CONVENTIONS.md](docs/COMMIT_CONVENTIONS.md)
+
+### CI/CD Pipeline
+
+The project uses automated CI/CD for building and deploying:
+- Automatic semantic versioning
+- Multi-architecture Docker builds (amd64, arm64)
+- Automated push to AWS ECR
+- GitHub releases with changelogs
+
+For setup instructions, see [docs/ECR_CI_CD_SETUP.md](docs/ECR_CI_CD_SETUP.md)
+
+### Pull Request Process
+
+1. Follow commit message conventions
+2. Update documentation for functionality changes
+3. Add tests for new features
+4. Ensure all tests pass: `go test ./...`
+5. Create PR with clear description
+
+### Testing
+
+```bash
+# Run all tests
+go test ./...
+
+# Run with coverage
+go test -cover ./...
+```
+
+## Documentation
+
+- `README.md`: Project overview
+- `docs/`: Detailed documentation
+- `docs/COMMIT_CONVENTIONS.md`: Commit message guidelines
+- `docs/ECR_CI_CD_SETUP.md`: CI/CD setup guide

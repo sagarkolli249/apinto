@@ -16,10 +16,17 @@
 /.idea/
 .vscode
 /vendor/
-/go.sum
 *.DS_Store
 /dist/
 .gitlab-ci.yml
 /outer/
 .env
 /.secrets
+
+# Node.js (for semantic-release)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.npmrc

@@ -1,0 +1,258 @@
+name: Build and Push to ECR with Semantic Versioning
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1  # Change this to your AWS region
+  ECR_REPOSITORY: apinto-gateway  # Change this to your ECR repository name
+
+jobs:
+  # Semantic versioning job - determines the next version
+  semantic-version:
+    name: Determine Semantic Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.semver.outputs.version }}
+      tag: ${{ steps.semver.outputs.tag }}
+      should_release: ${{ steps.semver.outputs.should_release }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for semantic versioning
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install semantic-release
+        run: |
+          npm install -g semantic-release@23 \
+            @semantic-release/changelog@6 \
+            @semantic-release/git@10 \
+            @semantic-release/github@10 \
+            @semantic-release/commit-analyzer@11 \
+            @semantic-release/release-notes-generator@12 \
+            conventional-changelog-conventionalcommits@7
+
+      - name: Run semantic-release (dry-run)
+        id: semver
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Run semantic-release in dry-run mode to get next version
+          npx semantic-release --dry-run --no-ci > semver-output.txt 2>&1 || true
+
+          # Extract version from output
+          NEXT_VERSION=$(cat semver-output.txt | grep -oP 'Published release \K[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "")
+
+          if [ -z "$NEXT_VERSION" ]; then
+            # If no new version, get the latest tag
+            NEXT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.1.0")
+            NEXT_VERSION=${NEXT_VERSION#v}
+            SHOULD_RELEASE="false"
+            echo "No new version to release, using existing: $NEXT_VERSION"
+          else
+            SHOULD_RELEASE="true"
+            echo "New version to release: $NEXT_VERSION"
+          fi
+
+          echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "should_release=$SHOULD_RELEASE" >> $GITHUB_OUTPUT
+
+          echo "Version: $NEXT_VERSION"
+          echo "Tag: v$NEXT_VERSION"
+          echo "Should Release: $SHOULD_RELEASE"
+
+  # Build and push Docker images to ECR
+  build-and-push:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    needs: semantic-version
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.6'
+
+      - name: Go mod tidy
+        run: go mod tidy
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build binary and create tarball
+        env:
+          VERSION: ${{ needs.semantic-version.outputs.version }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          chmod +x build/cmd/*.sh
+          ./build/cmd/package.sh ${VERSION} ${ARCH}
+
+      - name: Prepare Docker build context
+        env:
+          VERSION: ${{ needs.semantic-version.outputs.version }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          PackageName=apinto_${VERSION}_linux_${ARCH}.tar.gz
+          cp out/${PackageName} ./build/resources/apinto.linux.x64.tar.gz
+
+      - name: Build and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          VERSION: ${{ needs.semantic-version.outputs.version }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          PLATFORM="linux/$ARCH"
+          IMAGE_TAG="${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-${ARCH}"
+
+          docker build \
+            --platform=${PLATFORM} \
+            -t ${IMAGE_TAG} \
+            -f ./build/cmd/Dockerfile \
+            ./build/resources
+
+          docker push ${IMAGE_TAG}
+
+          echo "Pushed: ${IMAGE_TAG}"
+
+      - name: Cleanup
+        run: |
+          rm -rf ./build/resources/apinto.linux.x64.tar.gz
+
+  # Create multi-arch manifest
+  create-manifest:
+    name: Create Multi-Arch Manifest
+    runs-on: ubuntu-latest
+    needs: [semantic-version, build-and-push]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Create and push multi-arch manifest
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          VERSION: ${{ needs.semantic-version.outputs.version }}
+        run: |
+          # Create manifest for version tag
+          docker manifest create \
+            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION} \
+            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-amd64 \
+            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-arm64
+
+          docker manifest annotate \
+            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION} \
+            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-amd64 \
+            --os linux --arch amd64
+
+          docker manifest annotate \
+            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION} \
+            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-arm64 \
+            --os linux --arch arm64
+
+          docker manifest push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}
+
+          # Create manifest for latest tag
+          docker manifest create \
+            ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest \
+            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-amd64 \
+            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-arm64
+
+          docker manifest annotate \
+            ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest \
+            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-amd64 \
+            --os linux --arch amd64
+
+          docker manifest annotate \
+            ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest \
+            ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}-arm64 \
+            --os linux --arch arm64
+
+          docker manifest push ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+
+          echo "✅ Multi-arch manifests created and pushed:"
+          echo "   - ${ECR_REGISTRY}/${ECR_REPOSITORY}:${VERSION}"
+          echo "   - ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest"
+
+  # Release with semantic versioning
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [semantic-version, create-manifest]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.semantic-version.outputs.should_release == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install semantic-release
+        run: |
+          npm install -g semantic-release@23 \
+            @semantic-release/changelog@6 \
+            @semantic-release/git@10 \
+            @semantic-release/github@10 \
+            @semantic-release/commit-analyzer@11 \
+            @semantic-release/release-notes-generator@12 \
+            conventional-changelog-conventionalcommits@7
+
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+      - name: Output release info
+        env:
+          VERSION: ${{ needs.semantic-version.outputs.version }}
+          TAG: ${{ needs.semantic-version.outputs.tag }}
+        run: |
+          echo "🎉 Released version $VERSION with tag $TAG"
+          echo "📦 Docker images available at:"
+          echo "   - ${ECR_REPOSITORY}:${VERSION}"
+          echo "   - ${ECR_REPOSITORY}:latest"
