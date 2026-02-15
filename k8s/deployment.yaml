@@ -1,0 +1,231 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apinto-gateway
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: apinto
+  namespace: apinto-gateway
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apinto-config
+  namespace: apinto-gateway
+data:
+  # Add your Apinto configuration here
+  apinto.yml: |
+    # Apinto Gateway Configuration
+    # Customize as needed
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apinto-gateway
+  namespace: apinto-gateway
+  labels:
+    app: apinto-gateway
+    version: v0.1.0
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: apinto-gateway
+  template:
+    metadata:
+      labels:
+        app: apinto-gateway
+        version: v0.1.0
+    spec:
+      serviceAccountName: apinto
+
+      # Node selector for architecture (choose one based on your cluster)
+      # Option 1: For amd64/x86_64 nodes (most common)
+      nodeSelector:
+        kubernetes.io/arch: amd64
+
+      # Option 2: For arm64 nodes (uncomment if using ARM)
+      # nodeSelector:
+      #   kubernetes.io/arch: arm64
+
+      # Option 3: For mixed clusters - use node affinity
+      # affinity:
+      #   nodeAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #       nodeSelectorTerms:
+      #       - matchExpressions:
+      #         - key: kubernetes.io/arch
+      #           operator: In
+      #           values:
+      #           - amd64  # Change to arm64 for ARM nodes
+
+      containers:
+      - name: apinto
+        # For amd64 architecture (most common)
+        image: 865783518572.dkr.ecr.us-east-1.amazonaws.com/apinto-gateway:0.1.0-amd64
+
+        # For arm64 architecture (use this instead if you have ARM nodes)
+        # image: 865783518572.dkr.ecr.us-east-1.amazonaws.com/apinto-gateway:0.1.0-arm64
+
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: admin
+          containerPort: 9400
+          protocol: TCP
+
+        env:
+        - name: TZ
+          value: "Asia/Shanghai"
+
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        # Resource limits
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+        # Volume mounts
+        volumeMounts:
+        - name: apinto-data
+          mountPath: /var/lib/apinto
+        - name: config
+          mountPath: /etc/apinto
+          readOnly: true
+
+      volumes:
+      - name: apinto-data
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: apinto-config
+
+      # Security context
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: false  # Apinto might need root, adjust as needed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apinto-gateway
+  namespace: apinto-gateway
+  labels:
+    app: apinto-gateway
+spec:
+  type: ClusterIP  # Change to LoadBalancer if you need external access
+  selector:
+    app: apinto-gateway
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  - name: admin
+    port: 9400
+    targetPort: 9400
+    protocol: TCP
+---
+# Optional: LoadBalancer Service for external access
+apiVersion: v1
+kind: Service
+metadata:
+  name: apinto-gateway-external
+  namespace: apinto-gateway
+  labels:
+    app: apinto-gateway
+spec:
+  type: LoadBalancer
+  selector:
+    app: apinto-gateway
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+---
+# Optional: Ingress for HTTP routing
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: apinto-gateway
+  namespace: apinto-gateway
+  annotations:
+    # Uncomment and customize based on your ingress controller
+    # nginx.ingress.kubernetes.io/rewrite-target: /
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx  # Change based on your ingress controller
+  rules:
+  - host: apinto.example.com  # Change to your domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: apinto-gateway
+            port:
+              number: 8080
+  # tls:
+  # - hosts:
+  #   - apinto.example.com
+  #   secretName: apinto-tls
+---
+# Optional: HorizontalPodAutoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: apinto-gateway
+  namespace: apinto-gateway
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: apinto-gateway
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
