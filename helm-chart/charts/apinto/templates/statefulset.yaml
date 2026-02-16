@@ -53,6 +53,8 @@ spec:
               subPath: config.yml
             - name: apinto-data
               mountPath: /var/lib/apinto
+            - name: apinto-logs
+              mountPath: /var/log/apinto
       volumes:
         - name: apinto-config
           configMap:
@@ -60,6 +62,8 @@ spec:
             items:
               - key: config.yml
                 path: config.yml
+        - name: apinto-logs
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: apinto-data
