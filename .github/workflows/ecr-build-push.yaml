@@ -9,6 +9,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  packages: write
+
 env:
   AWS_REGION: us-east-1
   ECR_PRIVATE_REPOSITORY: apipark/apinto  # Private ECR repository
