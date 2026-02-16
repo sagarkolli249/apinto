@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-nsq
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: tcp
+      port: {{ .Values.service.tcpPort }}
+      targetPort: 4150
+    - name: http
+      port: {{ .Values.service.httpPort }}
+      targetPort: 4151
+  selector:
+    app: {{ .Release.Name }}-nsq
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-nsq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-nsq
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-nsq
+    spec:
+      containers:
+        - name: nsqd
+          image: {{ .Values.image }}
+          args: ["/nsqd"]
+          ports:
+            - containerPort: 4150
+              name: tcp
+            - containerPort: 4151
+              name: http

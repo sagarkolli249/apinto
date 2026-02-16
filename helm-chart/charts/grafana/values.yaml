@@ -1,0 +1,4 @@
+image: grafana/grafana:11.3.2
+service:
+  type: ClusterIP
+  port: 3000

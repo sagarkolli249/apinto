@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "apipark.fullname" . }}
+  labels:
+    {{- include "apipark.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.apipark.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.apipark.service.port }}
+      targetPort: 8288
+  selector:
+    app.kubernetes.io/name: {{ include "apipark.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

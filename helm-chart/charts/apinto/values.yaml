@@ -1,0 +1,36 @@
+image: public.ecr.aws/e5v3y2z9/apinto
+tag: 0.1.0
+
+service:
+  type: ClusterIP
+  httpPort: 8099
+  openApiPort: 9400
+  raftPort: 9401
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: gp2
+
+# Security context for non-root user support
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: "OnRootMismatch"
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+config:
+  apinto:
+    advertiseHost: "apipark-apinto.local"

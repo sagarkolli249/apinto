@@ -1,0 +1,16 @@
+image: redis:7.2.4
+service:
+  type: ClusterIP
+  port: 6379
+
+secrets:
+  enabled: true
+  k8sSecretName: apipark-app-secrets
+  serviceAccount:
+    name: apipark-sa
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::865783518572:role/eks-secrets-role
+  aws:
+    region: us-east-1
+    secretProviderClassName: apipark-aws-secrets
+    secretObjectName: "apipark/secrets"

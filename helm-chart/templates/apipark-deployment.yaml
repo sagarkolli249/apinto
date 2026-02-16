@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "apipark.fullname" . }}
+  labels:
+    {{- include "apipark.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.apipark.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "apipark.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "apipark.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      {{- with .Values.apipark.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: apipark
+          image: "{{ .Values.apipark.image }}:{{ .Values.apipark.tag }}"
+          imagePullPolicy: IfNotPresent
+          {{- with .Values.apipark.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          # command: ["/bin/sh", "-c"]
+          # args:
+          #   - |
+          #     echo "Waiting for MySQL at ${MYSQL_IP}:${MYSQL_PORT} ..."
+          #     for i in $(seq 1 60); do
+          #       nc -z "${MYSQL_IP}" "${MYSQL_PORT}" && echo "MySQL is up" && break
+          #       echo "MySQL not ready yet... ($i/60)"
+          #       sleep 5
+          #     done
+          #     echo "Starting APIPark..."
+          #     /usr/local/bin/apipark
+          ports:
+            - containerPort: 8288
+          envFrom:
+            - configMapRef:
+                name: {{ include "apipark.fullname" . }}-config
+            - secretRef:
+                name: {{ .Values.externalSecrets.targetSecretName }}
+          env:
+            - name: MYSQL_IP
+              value: {{ .Values.DBHOST }}
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: REDIS_ADDR
+              value: {{ .Values.REDISADDR }}
+            - name: Init
+              value: "false"
+            - name: ERROR_LOG_LEVEL
+              value: "info"
+            - name: ERROR_EXPIRE
+              value: "true"
+            - name: ERROR_PERIOD
+              value: "day"
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.externalSecrets.targetSecretName }}
+                  key: APIPARK_ADMIN_PASSWORD
+            - name: InfluxdbToken
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.externalSecrets.targetSecretName }}
+                  key: INFLUX_TOKEN
+            - name: MYSQL_USER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.externalSecrets.targetSecretName }}
+                  key: MYSQL_USERNAME
+            - name: MYSQL_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.externalSecrets.targetSecretName }}
+                  key: MYSQL_PASSWORD
+            - name: MYSQL_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.externalSecrets.targetSecretName }}
+                  key: MYSQL_DATABASE
+            # - name: REDIS_PWD
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: {{ .Values.externalSecrets.targetSecretName }}
+            #       key: REDIS_PASSWORD
+            - name: REDIS_PWD
+              value: ""
+          startupProbe:
+            httpGet:
+              path: /api/v1/account/login
+              port: 8288
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/v1/account/login
+              port: 8288
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            failureThreshold: 30
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/v1/account/login
+              port: 8288
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            failureThreshold: 10
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.apipark.resources | nindent 12 }}

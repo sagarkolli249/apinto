@@ -1,0 +1,107 @@
+mysql:
+  enabled: false
+influxdb:
+  enabled: true
+loki:
+  enabled: true
+grafana:
+  enabled: true
+apinto:
+  enabled: true
+redis:
+  enabled: false
+nsq:
+  enabled: true
+DBHOST: apipark.c0bysoi2yx9s.us-east-1.rds.amazonaws.com
+REDISADDR: apipark-redis.cm24bo.ng.0001.use1.cache.amazonaws.com:6379
+apipark:
+  image: public.ecr.aws/e5v3y2z9/apipark/apipark
+  tag: 1.0.0
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8288
+  resources: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop:
+        - ALL
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+  hosts:
+    apipark:
+      host: aig.aigfintinc.com
+      paths:
+      - path: /
+        pathType: Prefix
+    apinto:
+      host: apinto.aigfintinc.com
+      paths:
+      - path: /
+        pathType: Prefix
+    grafana:
+      host: grafana.aigfintinc.com
+      paths:
+      - path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - aig.aigfintinc.com
+    secretName: aig-secret-tls
+  - hosts:
+    - apinto.aigfintinc.com
+    secretName: apinto-tls
+serviceAccount:
+  create: true
+  name: apipark-sa
+  annotations:
+    eks.amazonaws.com/role-arn: ""  # Add your IAM role ARN here
+externalSecrets:
+  enabled: true
+  region: us-east-1
+  ssmPrefix: /apipark
+  secretStoreName: apipark-aws
+  targetSecretName: apipark-app-secrets
+  refreshInterval: 1m
+config:
+  apipark:
+    LOG_LEVEL: info
+    ERROR_FILE_NAME: error.log
+    ERROR_DIR: /var/log/apipark
+    FEATURE_X_ENABLED: 'true'
+  apinto:
+    advertiseHost: apipark-apinto.local
+    httpPort: 8099
+    openApiPort: 9400
+    raftPort: 9401
+global:
+  serviceAccountName: apipark-sa
+  externalSecretName: apipark-app-secrets
+secrets:
+  enabled: true
+  k8sSecretName: apipark-app-secrets
+  aws:
+    region: us-east-1
+    secretObjectName: apipark/secrets
+    secretProviderClassName: apipark-aws-secrets
+

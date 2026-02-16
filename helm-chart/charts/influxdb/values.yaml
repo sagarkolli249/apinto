@@ -1,0 +1,20 @@
+image: influxdb:2.6
+service:
+  type: ClusterIP
+  port: 8086
+persistence:
+  enabled: true
+  size: 20Gi
+  storageClass: "gp2"
+
+secrets:
+  enabled: true
+  k8sSecretName: apipark-app-secrets
+  serviceAccount:
+    name: apipark-sa
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::865783518572:role/eks-secrets-role
+  aws:
+    region: us-east-1
+    secretProviderClassName: apipark-aws-secrets
+    secretObjectName: "apipark/secrets"

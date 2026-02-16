@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-redis
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 6379
+      name: redis
+  selector:
+    app: {{ .Release.Name }}-redis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-redis
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-redis
+    spec:
+      serviceAccountName: {{ .Values.global.serviceAccountName | default "apipark-sa" }}
+      containers:
+        - name: redis
+          image: {{ .Values.image }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.global.externalSecretName | default "apipark-app-secrets" }}
+          args: ["redis-server", "--requirepass", "$(REDIS_PASSWORD)", "--appendonly", "no"]
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: apipark-app-secrets
+                  key: REDIS_PASSWORD
+          ports:
+            - containerPort: 6379
+              name: redis
+          volumeMounts:

@@ -1,0 +1,36 @@
+apiVersion: v2
+name: apipark
+version: 0.3.0
+description: Deploy APIPark with subcharts (MySQL, InfluxDB, Loki, Grafana, Apinto, Redis, NSQ), configs via ConfigMap and secrets via AWS Secrets Manager CSI.
+type: application
+appVersion: "1.9.0-beta"
+kubeVersion: ">=1.23.0-0"
+dependencies:
+  - name: mysql
+    version: 0.1.0
+    repository: "file://charts/mysql"
+    condition: mysql.enabled
+  - name: influxdb
+    version: 0.1.0
+    repository: "file://charts/influxdb"
+    condition: influxdb.enabled
+  - name: loki
+    version: 0.1.0
+    repository: "file://charts/loki"
+    condition: loki.enabled
+  - name: grafana
+    version: 0.1.0
+    repository: "file://charts/grafana"
+    condition: grafana.enabled
+  - name: apinto
+    version: 0.1.0
+    repository: "file://charts/apinto"
+    condition: apinto.enabled
+  - name: redis
+    version: 0.1.0
+    repository: "file://charts/redis"
+    condition: redis.enabled
+  - name: nsq
+    version: 0.1.0
+    repository: "file://charts/nsq"
+    condition: nsq.enabled

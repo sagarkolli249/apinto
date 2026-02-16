@@ -1,0 +1,30 @@
+{{- $svcName := include "apinto.fullname" . -}}
+{{- $namespace := .Release.Namespace -}}
+{{- $svcHost := printf "%s.%s.svc.cluster.local" $svcName $namespace -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $svcName }}-config
+  labels:
+    {{- include "apinto.labels" . | nindent 4 }}
+data:
+  config.yml: |-
+    version: 2
+
+    client:
+      advertise_urls:
+        - http://{{ $svcHost }}:9400
+      listen_urls:
+        - http://0.0.0.0:9400
+
+    gateway:
+      advertise_urls:
+        - http://{{ $svcHost }}:8099
+      listen_urls:
+        - http://0.0.0.0:8099
+
+    peer:
+      listen_urls:
+        - http://0.0.0.0:9401
+      advertise_urls:
+        - http://{{ $svcHost }}:9401

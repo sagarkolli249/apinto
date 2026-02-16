@@ -1,0 +1,5 @@
+image: nsqio/nsq:v1.3.0
+service:
+  type: ClusterIP
+  tcpPort: 4150
+  httpPort: 4151

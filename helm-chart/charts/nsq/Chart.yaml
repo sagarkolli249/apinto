@@ -1,0 +1,6 @@
+apiVersion: v2
+name: nsq
+version: 0.1.0
+type: application
+appVersion: "1.3.0"
+description: nsq subchart for APIPark

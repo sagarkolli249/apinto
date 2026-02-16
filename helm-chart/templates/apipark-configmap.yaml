@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "apipark.fullname" . }}-config
+  labels:
+    {{- include "apipark.labels" . | nindent 4 }}
+data:
+  LOG_LEVEL: {{ .Values.config.apipark.LOG_LEVEL | quote }}
+  ERROR_FILE_NAME: {{ .Values.config.apipark.ERROR_FILE_NAME | quote }}
+  ERROR_DIR: {{ .Values.config.apipark.ERROR_DIR | quote }}
+  FEATURE_X_ENABLED: {{ .Values.config.apipark.FEATURE_X_ENABLED | quote }}

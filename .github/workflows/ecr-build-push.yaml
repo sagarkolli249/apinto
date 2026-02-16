@@ -230,11 +230,50 @@ jobs:
   #
   #         docker manifest push ${ECR_PUBLIC_REGISTRY}/${{ env.ECR_PUBLIC_REPOSITORY }}:${VERSION}
 
+  # Update Helm chart versions
+  update-helm-versions:
+    name: Update Helm Chart Versions
+    runs-on: ubuntu-latest
+    needs: [semantic-version, build-and-push]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update helm chart versions
+        env:
+          VERSION: ${{ needs.semantic-version.outputs.version }}
+        run: |
+          # Update apinto subchart version and appVersion
+          sed -i "s/^version:.*/version: ${VERSION}/" helm-chart/charts/apinto/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: \"${VERSION}\"/" helm-chart/charts/apinto/Chart.yaml
+
+          # Update apinto image tag in values.yaml
+          sed -i "s/^tag:.*/tag: ${VERSION}/" helm-chart/charts/apinto/values.yaml
+
+          # Update main chart version
+          sed -i "s/^version:.*/version: ${VERSION}/" helm-chart/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: \"${VERSION}\"/" helm-chart/Chart.yaml
+
+          # Update apinto dependency version in main chart
+          sed -i "/name: apinto/,/condition:/ s/version:.*/version: ${VERSION}/" helm-chart/Chart.yaml
+
+      - name: Commit version updates
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add helm-chart/Chart.yaml helm-chart/charts/apinto/Chart.yaml helm-chart/charts/apinto/values.yaml
+          git diff --staged --quiet || git commit -m "chore: bump helm chart versions to ${{ needs.semantic-version.outputs.version }} [skip ci]"
+          git push
+
   # Release with semantic versioning
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [semantic-version, build-and-push]
+    needs: [semantic-version, build-and-push, update-helm-versions]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.semantic-version.outputs.should_release == 'true'
     steps:
       - name: Checkout
@@ -272,3 +311,51 @@ jobs:
           echo "📦 Docker images available at:"
           echo "   - ${ECR_REPOSITORY}:${VERSION}"
           echo "   - ${ECR_REPOSITORY}:latest"
+
+  # Deploy to Kubernetes using Helm
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: [semantic-version, build-and-push, update-helm-versions]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.12.0'
+
+      - name: Deploy with Helm
+        env:
+          VERSION: ${{ needs.semantic-version.outputs.version }}
+          NAMESPACE: ${{ secrets.K8S_NAMESPACE }}
+        run: |
+          helm upgrade --install apipark ./helm-chart \
+            --namespace ${NAMESPACE} \
+            --create-namespace \
+            --set apinto.image=public.ecr.aws/${{ env.PUBLIC_REGISTRY_ALIAS }}/${{ env.ECR_PUBLIC_REPOSITORY }} \
+            --set apinto.tag=${VERSION} \
+            --wait \
+            --timeout 10m
+
+      - name: Verify deployment
+        env:
+          NAMESPACE: ${{ secrets.K8S_NAMESPACE }}
+        run: |
+          kubectl rollout status statefulset/apipark-apinto -n ${NAMESPACE} --timeout=10m
+          kubectl get statefulset,pods,svc -n ${NAMESPACE}

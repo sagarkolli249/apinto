@@ -1,0 +1,6 @@
+apiVersion: v2
+name: grafana
+version: 0.1.0
+type: application
+appVersion: "11.3.2"
+description: grafana subchart for APIPark

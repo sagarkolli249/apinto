@@ -1,0 +1,4 @@
+image: grafana/loki:3.2.1
+service:
+  type: ClusterIP
+  port: 3100
