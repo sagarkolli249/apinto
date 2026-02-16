@@ -1,9 +1,9 @@
-## Apinto Gateway - Enhanced for AWS Bedrock
+## Apinto Gateway - Enhanced for AWS Bedrock & Mistral AI
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/eolinker/apinto)](https://goreportcard.com/report/github.com/eolinker/apinto) [![Releases](https://img.shields.io/github/release/eolinker/apinto/all.svg?style=flat-square)](https://github.com/eolinker/apinto/releases) [![LICENSE](https://img.shields.io/github/license/eolinker/Apinto.svg?style=flat-square)](https://github.com/eolinker/apinto/blob/main/LICENSE)![](https://shields.io/github/downloads/eolinker/apinto/total)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
-> **This is an enhanced fork** of the original [Apinto Gateway](https://github.com/eolinker/apinto) with additional support for AWS Bedrock tool calling and improved AI provider integrations.
+> **This is an enhanced fork** of the original [Apinto Gateway](https://github.com/eolinker/apinto) with additional support for AWS Bedrock and Mistral AI tool calling, plus improved AI provider integrations.
 
 ### What's New in This Fork
 
@@ -11,7 +11,12 @@
   - Automatic conversion of OpenAI tool definitions to Bedrock format
   - Support for tool result handling and multi-turn conversations
   - Comprehensive test coverage for tool calling workflows
-- **Enhanced Message Handling**: Improved message format conversion between OpenAI and Bedrock APIs
+- **Mistral AI Tool Calling Support**: Native tool calling implementation for Mistral AI
+  - Custom converter with OpenAI-compatible API format
+  - Direct passthrough of tools, tool_choice, and tool_calls
+  - Enhanced logging and accurate token usage tracking
+  - Full backward compatibility with non-tool requests
+- **Enhanced Message Handling**: Improved message format conversion between OpenAI and provider-specific APIs
 - **Production-Ready**: Includes comprehensive unit tests and benchmarks
 - **Kubernetes Deployment**: Enhanced Helm charts and deployment guides
 
@@ -132,21 +137,35 @@ apinto start
 
 3.To configure the gateway through the visual interface, click [apinto dashboard](https://github.com/eolinker/apinto-dashboard)
 
-### AWS Bedrock Enhancements
+### AI Provider Enhancements
 
-This fork includes significant enhancements for AWS Bedrock integration:
+This fork includes significant enhancements for multiple AI providers:
 
-#### Tool Calling Support
+#### AWS Bedrock Tool Calling Support
 - **OpenAI-Compatible Tool Definitions**: Pass OpenAI-style tool/function definitions
 - **Automatic Format Conversion**: Converts between OpenAI and Bedrock tool formats
 - **Tool Name Sanitization**: Ensures tool names comply with Bedrock requirements
 - **Multi-Turn Conversations**: Full support for tool use and tool result messages
 
-#### Implementation Details
+**Implementation Details:**
 - `drivers/ai-provider/bedrock/bedrock.go`: Enhanced request conversion with tool support
 - `drivers/ai-provider/bedrock/message.go`: Improved message handling for tool calls
 - `drivers/ai-provider/bedrock/tools.go`: OpenAI to Bedrock tool conversion logic
 - Comprehensive test coverage in `*_test.go` files
+
+#### Mistral AI Tool Calling Support
+- **Custom Converter**: Native Mistral AI implementation replacing generic OpenAI converter
+- **OpenAI-Compatible API**: Direct passthrough of `tools`, `tool_choice`, and `tool_calls` fields
+- **Enhanced Debugging**: Detailed logging for tool call detection and execution
+- **Accurate Metrics**: Token usage tracking from Mistral API response
+- **Backward Compatible**: Non-tool requests work exactly as before
+
+**Implementation Details:**
+- `drivers/ai-provider/mistralai/mistralai.go`: Custom converter with tool calling support
+- Custom `RequestConvert()` method handles tool definitions and converts requests
+- Custom `ResponseConvert()` method parses tool_calls from Mistral responses
+- See [BUILD_INSTRUCTIONS.md](./BUILD_INSTRUCTIONS.md) for build and deployment guide
+- See [MISTRAL_TOOL_CALLING_IMPLEMENTATION.md](./MISTRAL_TOOL_CALLING_IMPLEMENTATION.md) for implementation details
 
 ### Container Images
 

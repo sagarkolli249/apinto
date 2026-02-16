@@ -30,3 +30,11 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 .npmrc
+
+# Build artifacts
+*.tar.gz
+build/resources/*.tar.gz
+
+# Backup files
+*.backup
+*.bak
