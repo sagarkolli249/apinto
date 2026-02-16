@@ -1,5 +1,5 @@
 image: public.ecr.aws/e5v3y2z9/apinto
-tag: 1.0.1
+tag: 1.1.0
 
 service:
   type: ClusterIP
