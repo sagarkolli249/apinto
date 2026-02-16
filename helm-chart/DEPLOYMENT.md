@@ -12,3 +12,10 @@ The apinto service is deployed as a StatefulSet with automated CI/CD pipeline.
 Note: IAM policy updated to allow EKS cluster access
 
 Added RBAC permissions for GitHub Actions IAM user
+
+## Deployment Details
+- Cluster: ai-eks
+- Namespace: apipark (automated deployment)
+- StatefulSet with volumeClaimTemplates for PVC management
+- Non-root user security context enabled
+
