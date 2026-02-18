@@ -1,3 +1,15 @@
+## [1.2.0](https://github.com/sagarkolli249/apinto/compare/v1.1.2...v1.2.0) (2026-02-18)
+
+
+### Features
+
+* deploy only apinto subchart in CI/CD pipeline ([984726a](https://github.com/sagarkolli249/apinto/commit/984726ac4517ade2e317a783e8f11312b149a932))
+
+
+### Bug Fixes
+
+* use kubeconfig from GitHub Secret instead of dynamic generation ([0725c47](https://github.com/sagarkolli249/apinto/commit/0725c4747966d8ca7f0919309c88ba29a5a37117))
+
 ## [1.1.2](https://github.com/sagarkolli249/apinto/compare/v1.1.1...v1.1.2) (2026-02-18)
 
 
