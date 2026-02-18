@@ -1,3 +1,11 @@
+## [1.2.2](https://github.com/sagarkolli249/apinto/compare/v1.2.1...v1.2.2) (2026-02-18)
+
+
+### Bug Fixes
+
+* deploy apinto as separate helm release ([6dea957](https://github.com/sagarkolli249/apinto/commit/6dea9571cf498ea8626c1a8d1f80703659cd0a3e))
+* set apinto service name to apipark-apinto for backward compatibility ([6c3a94e](https://github.com/sagarkolli249/apinto/commit/6c3a94e06e72cab430bf6dda6623d025d6cbcc7c))
+
 ## [1.2.1](https://github.com/sagarkolli249/apinto/compare/v1.2.0...v1.2.1) (2026-02-18)
 
 
