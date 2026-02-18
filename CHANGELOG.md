@@ -1,3 +1,11 @@
+## [1.2.1](https://github.com/sagarkolli249/apinto/compare/v1.2.0...v1.2.1) (2026-02-18)
+
+
+### Bug Fixes
+
+* add AWS CLI installation step for kubeconfig exec auth ([aad7ca7](https://github.com/sagarkolli249/apinto/commit/aad7ca728bdbbf720f562d9534c63a516ae86679))
+* add conditional deployment for apipark to allow apinto-only updates ([0317fc0](https://github.com/sagarkolli249/apinto/commit/0317fc033772fdab94ac87a1ad44cc71693fc21b))
+
 ## [1.2.0](https://github.com/sagarkolli249/apinto/compare/v1.1.2...v1.2.0) (2026-02-18)
 
 
