@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/sagarkolli249/apinto/compare/v1.1.1...v1.1.2) (2026-02-18)
+
+
+### Bug Fixes
+
+* add /var/run/apinto volume mount for non-root user permissions ([e8f22e0](https://github.com/sagarkolli249/apinto/commit/e8f22e04d43bab474bf6e98c1c334c7e0426e4d6))
+
 ## [1.1.1](https://github.com/sagarkolli249/apinto/compare/v1.1.0...v1.1.1) (2026-02-18)
 
 
