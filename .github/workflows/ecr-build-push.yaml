@@ -365,16 +365,17 @@ jobs:
         run: |
           cd helm-chart && helm dependency update && cd ..
 
-      - name: Deploy apinto only (disable other subcharts)
+      - name: Deploy apinto only (disable other subcharts and parent deployment)
         env:
           VERSION: ${{ needs.semantic-version.outputs.version }}
           NAMESPACE: ${{ secrets.K8S_NAMESPACE }}
         run: |
-          # Deploy parent chart but disable all subcharts except apinto
+          # Deploy parent chart but disable parent deployment and all subcharts except apinto
           # This ensures only apinto is updated without touching other services
           helm upgrade --install apipark ./helm-chart \
             --namespace ${NAMESPACE} \
             --create-namespace \
+            --set apipark.enabled=false \
             --set mysql.enabled=false \
             --set influxdb.enabled=false \
             --set loki.enabled=false \
