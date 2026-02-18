@@ -335,12 +335,17 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Configure kubectl
+      - name: Configure kubeconfig from GitHub Secret
         run: |
-          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
-          # Verify kubectl access
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBECONFIG_B64 }}" | base64 -d > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+          echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
+
+      - name: Validate cluster access
+        run: |
           kubectl version --client
-          kubectl auth can-i get pods --namespace ${{ secrets.K8S_NAMESPACE }}
+          kubectl get ns
 
       - name: Install Helm
         uses: azure/setup-helm@v3
