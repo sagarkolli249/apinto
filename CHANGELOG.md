@@ -1,3 +1,11 @@
+## [1.1.1](https://github.com/sagarkolli249/apinto/compare/v1.1.0...v1.1.1) (2026-02-18)
+
+
+### Bug Fixes
+
+* add helm dependency update step to CI pipeline ([bfd4e65](https://github.com/sagarkolli249/apinto/commit/bfd4e65a9ea09fe198b6554dd33684afc0b2161f))
+* override container command to use start.sh for APINTO_DEBUG support ([57acd50](https://github.com/sagarkolli249/apinto/commit/57acd50760324f9e9cfcb720ff2739f6e450d441))
+
 ## [1.1.0](https://github.com/sagarkolli249/apinto/compare/v1.0.0...v1.1.0) (2026-02-18)
 
 
