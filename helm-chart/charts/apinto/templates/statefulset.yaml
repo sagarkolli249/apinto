@@ -1,7 +1,8 @@
+{{- $name := .Values.fullnameOverride | default (printf "%s-apinto" .Release.Name) -}}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-apinto
+  name: {{ $name }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -15,22 +16,22 @@ spec:
       port: {{ .Values.service.raftPort }}
       targetPort: {{ .Values.service.raftPort }}
   selector:
-    app: {{ .Release.Name }}-apinto
+    app: {{ $name }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ .Release.Name }}-apinto
+  name: {{ $name }}
 spec:
-  serviceName: {{ .Release.Name }}-apinto
+  serviceName: {{ $name }}
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-apinto
+      app: {{ $name }}
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-apinto
+        app: {{ $name }}
     spec:
       {{- with .Values.podSecurityContext }}
       securityContext:

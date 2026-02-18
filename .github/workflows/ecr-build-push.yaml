@@ -368,11 +368,13 @@ jobs:
         run: |
           # Deploy apinto subchart as its own separate helm release
           # This is completely independent from the parent apipark release
+          # fullnameOverride ensures service name is apipark-apinto (matching existing setup)
           helm upgrade --install apipark-apinto ./helm-chart/charts/apinto \
             --namespace ${NAMESPACE} \
             --create-namespace \
             --set image=public.ecr.aws/${{ env.PUBLIC_REGISTRY_ALIAS }}/${{ env.ECR_PUBLIC_REPOSITORY }} \
             --set tag=${VERSION} \
+            --set fullnameOverride=apipark-apinto \
             --wait \
             --timeout 10m
 
@@ -380,5 +382,5 @@ jobs:
         env:
           NAMESPACE: ${{ secrets.K8S_NAMESPACE }}
         run: |
-          kubectl rollout status statefulset/apipark-apinto-apinto -n ${NAMESPACE} --timeout=10m
+          kubectl rollout status statefulset/apipark-apinto -n ${NAMESPACE} --timeout=10m
           kubectl get statefulset,pods,svc -n ${NAMESPACE} | grep apinto
