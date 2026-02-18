@@ -1,5 +1,5 @@
 image: public.ecr.aws/e5v3y2z9/apinto
-tag: 1.1.2
+tag: 1.2.0
 
 # Environment variables for apinto
 env:
