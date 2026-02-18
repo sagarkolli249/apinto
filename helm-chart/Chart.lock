@@ -13,12 +13,12 @@ dependencies:
   version: 0.1.0
 - name: apinto
   repository: file://charts/apinto
-  version: 1.1.0
+  version: 1.1.1
 - name: redis
   repository: file://charts/redis
   version: 0.1.0
 - name: nsq
   repository: file://charts/nsq
   version: 0.1.0
-digest: sha256:7ed88b3f656e669f9a48ff8f1da307f9623c6cdba18820553e79d832ad172e70
-generated: "2026-02-18T10:19:34.339679+05:30"
+digest: sha256:148aaf08e9531c088db2c3a7458a016a797e3e1ce64b12e8a9aba834edfedd28
+generated: "2026-02-18T10:43:04.139445+05:30"

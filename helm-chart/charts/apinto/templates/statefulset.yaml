@@ -63,6 +63,8 @@ spec:
               mountPath: /var/lib/apinto
             - name: apinto-logs
               mountPath: /var/log/apinto
+            - name: apinto-run
+              mountPath: /var/run/apinto
       volumes:
         - name: apinto-config
           configMap:
@@ -71,6 +73,8 @@ spec:
               - key: config.yml
                 path: config.yml
         - name: apinto-logs
+          emptyDir: {}
+        - name: apinto-run
           emptyDir: {}
   volumeClaimTemplates:
     - metadata:
