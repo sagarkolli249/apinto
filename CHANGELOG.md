@@ -1,3 +1,21 @@
+## [1.1.0](https://github.com/sagarkolli249/apinto/compare/v1.0.0...v1.1.0) (2026-02-18)
+
+
+### Features
+
+* **mistral:** add tool calling support with custom converter ([21cd8f5](https://github.com/sagarkolli249/apinto/commit/21cd8f543b4c96dce0877bb6be2ac236aaaf195a))
+
+
+### Bug Fixes
+
+* add APINTO_DEBUG env var to run in foreground mode ([d73ca33](https://github.com/sagarkolli249/apinto/commit/d73ca336ec34e230ca5d5c5ec418a726b8dcedee))
+* add log volume mount for apinto startup ([29d798e](https://github.com/sagarkolli249/apinto/commit/29d798e87c482dbb281d17e95e455647ec708061))
+
+
+### Documentation
+
+* update deployment namespace to apipark ([1525351](https://github.com/sagarkolli249/apinto/commit/1525351a08a2ee6d5dcd91318bcabd04b5ec6bc2))
+
 ## 1.0.0 (2026-02-16)
 
 
