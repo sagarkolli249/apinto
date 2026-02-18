@@ -39,6 +39,7 @@ spec:
       containers:
         - name: apinto
           image: {{ .Values.image }}:{{ .Values.tag }}
+          command: ["/bin/bash", "/apinto/start.sh"]
           {{- with .Values.containerSecurityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
