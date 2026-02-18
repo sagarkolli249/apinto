@@ -338,6 +338,9 @@ jobs:
       - name: Configure kubectl
         run: |
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+          # Verify kubectl access
+          kubectl version --client
+          kubectl auth can-i get pods --namespace ${{ secrets.K8S_NAMESPACE }}
 
       - name: Install Helm
         uses: azure/setup-helm@v3
