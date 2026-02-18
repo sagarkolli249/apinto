@@ -1,9 +1,9 @@
 apiVersion: v2
 name: apipark
-version: 1.2.1
+version: 1.2.2
 description: Deploy APIPark with subcharts (MySQL, InfluxDB, Loki, Grafana, Apinto, Redis, NSQ), configs via ConfigMap and secrets via AWS Secrets Manager CSI.
 type: application
-appVersion: "1.2.1"
+appVersion: "1.2.2"
 kubeVersion: ">=1.23.0-0"
 dependencies:
   - name: mysql
@@ -23,7 +23,7 @@ dependencies:
     repository: "file://charts/grafana"
     condition: grafana.enabled
   - name: apinto
-    version: 1.2.1
+    version: 1.2.2
     repository: "file://charts/apinto"
     condition: apinto.enabled
   - name: redis
