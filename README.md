@@ -18,7 +18,8 @@
   - Full backward compatibility with non-tool requests
 - **Enhanced Message Handling**: Improved message format conversion between OpenAI and provider-specific APIs
 - **Production-Ready**: Includes comprehensive unit tests and benchmarks
-- **Kubernetes Deployment**: Enhanced Helm charts and deployment guides
+- **Kubernetes Deployment**: Enhanced Helm charts with automated CI/CD deployment pipeline
+- **Container Images**: Multi-architecture support (amd64/arm64) with automated builds to AWS ECR
 
 ---
 
