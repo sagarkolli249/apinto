@@ -20,6 +20,7 @@
 - **Production-Ready**: Includes comprehensive unit tests and benchmarks
 - **Kubernetes Deployment**: Enhanced Helm charts with automated CI/CD deployment pipeline
 - **Container Images**: Multi-architecture support (amd64/arm64) with automated builds to AWS ECR
+- **Independent Deployment**: Apinto deployed as separate Helm release without impacting other services
 
 ---
 
