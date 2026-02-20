@@ -316,12 +316,12 @@ jobs:
           echo "   - ${ECR_REPOSITORY}:${VERSION}"
           echo "   - ${ECR_REPOSITORY}:latest"
 
-  # Deploy to Kubernetes using Helm
+  # Deploy to Kubernetes using Helm (DISABLED - CI/CD only builds and pushes images)
   deploy:
     name: Deploy to Kubernetes
     runs-on: ubuntu-latest
     needs: [semantic-version, build-and-push, update-helm-versions]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: false  # Deployment disabled - pipeline only builds and pushes to ECR
     steps:
       - name: Checkout
         uses: actions/checkout@v4
