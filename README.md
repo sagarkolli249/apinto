@@ -21,6 +21,7 @@
 - **Kubernetes Deployment**: Enhanced Helm charts with automated CI/CD deployment pipeline
 - **Container Images**: Multi-architecture support (amd64/arm64) with automated builds to AWS ECR
 - **Independent Deployment**: Apinto deployed as separate Helm release without impacting other services
+- **Automated CI/CD**: Full pipeline automation from code commit to Kubernetes deployment
 
 ---
 
