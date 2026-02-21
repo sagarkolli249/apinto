@@ -1,8 +1,8 @@
 module github.com/eolinker/apinto
 
-go 1.24.0
+go 1.25.0
 
-toolchain go1.24.7
+toolchain go1.25.1
 
 require (
 	github.com/IBM/sarama v1.45.2
