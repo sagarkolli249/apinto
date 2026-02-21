@@ -1,3 +1,25 @@
+## [1.2.3](https://github.com/sagarkolli249/apinto/compare/v1.2.2...v1.2.3) (2026-02-21)
+
+
+### Documentation
+
+* **readme:** enhance AI provider documentation with comprehensive model support matrix ([enterprise](https://github.com/sagarkolli249/apinto/commit/enterprise))
+  - Add detailed AI provider comparison table with feature matrix
+  - Document tool calling support across AWS Bedrock, Mistral AI, OpenAI, Anthropic, and Google Gemini
+  - Include production status indicators for each provider
+  - Add universal tool calling interface examples
+  - Clarify enterprise edition positioning with extended multi-provider support
+  - Improve technical implementation details for AWS Bedrock and Mistral AI integrations
+  - Add supported model lists for each provider
+
+### Features
+
+* **ai-providers:** clarify enterprise-grade multi-provider AI orchestration capabilities
+  - Highlight production-ready status for AWS Bedrock and Mistral AI
+  - Document OpenAI-compatible API interface across all providers
+  - Add multi-architecture container image support details
+  - Enhanced security documentation (non-root execution, AWS Secrets Manager)
+
 ## [1.2.2](https://github.com/sagarkolli249/apinto/compare/v1.2.1...v1.2.2) (2026-02-18)
 
 

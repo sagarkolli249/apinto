@@ -1,27 +1,53 @@
-## Apinto Gateway - Enhanced for AWS Bedrock & Mistral AI
+## Apinto Gateway - Enterprise Edition with Extended AI Model Support
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/eolinker/apinto)](https://goreportcard.com/report/github.com/eolinker/apinto) [![Releases](https://img.shields.io/github/release/eolinker/apinto/all.svg?style=flat-square)](https://github.com/eolinker/apinto/releases) [![LICENSE](https://img.shields.io/github/license/eolinker/Apinto.svg?style=flat-square)](https://github.com/eolinker/apinto/blob/main/LICENSE)![](https://shields.io/github/downloads/eolinker/apinto/total)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
-> **This is an enhanced fork** of the original [Apinto Gateway](https://github.com/eolinker/apinto) with additional support for AWS Bedrock and Mistral AI tool calling, plus improved AI provider integrations.
+> **Enterprise-Grade AI Gateway** - A specialized fork of the original [Apinto Gateway](https://github.com/eolinker/apinto) with comprehensive support for multiple AI providers including AWS Bedrock, Mistral AI, OpenAI, Anthropic Claude, and more. Designed for production deployments requiring advanced tool calling, function execution, and multi-provider AI orchestration.
 
-### What's New in This Fork
+### What's New in This Enterprise Edition
 
-- **AWS Bedrock Tool Calling Support**: Full support for OpenAI-compatible tool calling (function calling) via AWS Bedrock
+#### 🚀 Extended AI Provider Support
+
+This specialized version includes native support for leading AI providers with full tool calling capabilities:
+
+- **AWS Bedrock** - Production-ready with tool calling support for Claude, Llama, and other Bedrock models
+- **Mistral AI** - Native Mistral integration with complete tool calling implementation
+- **OpenAI** - Enhanced GPT-4 and GPT-3.5 support with function calling
+- **Anthropic Claude** - Direct Claude API integration via Bedrock
+- **Google Gemini** - Support for Google's latest models
+- **Additional Providers** - Extensible architecture for custom AI provider integration
+
+#### 🔧 Advanced Tool Calling Features
+
+- **AWS Bedrock Tool Calling**: Full OpenAI-compatible tool calling (function calling) via AWS Bedrock
   - Automatic conversion of OpenAI tool definitions to Bedrock format
   - Support for tool result handling and multi-turn conversations
   - Comprehensive test coverage for tool calling workflows
-- **Mistral AI Tool Calling Support**: Native tool calling implementation for Mistral AI
+  - Native support for Claude, Llama 3, and Command R models
+
+- **Mistral AI Tool Calling**: Native tool calling implementation for Mistral AI
   - Custom converter with OpenAI-compatible API format
   - Direct passthrough of tools, tool_choice, and tool_calls
   - Enhanced logging and accurate token usage tracking
   - Full backward compatibility with non-tool requests
+
+- **Universal Tool Interface**: Standardized tool calling across all supported AI providers
+  - Consistent OpenAI-compatible API format
+  - Automatic provider-specific format conversion
+  - Multi-turn conversation support with tool results
+  - Streaming support for tool calls
+
+#### 🏢 Enterprise Production Features
+
 - **Enhanced Message Handling**: Improved message format conversion between OpenAI and provider-specific APIs
-- **Production-Ready**: Includes comprehensive unit tests and benchmarks
-- **Kubernetes Deployment**: Enhanced Helm charts with automated CI/CD deployment pipeline
+- **Production-Ready**: Comprehensive unit tests, benchmarks, and error handling
+- **Kubernetes Native**: Enhanced Helm charts with automated CI/CD deployment pipeline
 - **Container Images**: Multi-architecture support (amd64/arm64) with automated builds to AWS ECR
 - **Independent Deployment**: Apinto deployed as separate Helm release without impacting other services
 - **Automated CI/CD**: Full pipeline automation from code commit to Kubernetes deployment
+- **High Availability**: StatefulSet-based deployment with persistent storage
+- **Security**: Non-root container execution, AWS Secrets Manager integration
 
 ---
 
@@ -140,15 +166,29 @@ apinto start
 
 3.To configure the gateway through the visual interface, click [apinto dashboard](https://github.com/eolinker/apinto-dashboard)
 
-### AI Provider Enhancements
+### AI Provider Integration Details
 
-This fork includes significant enhancements for multiple AI providers:
+This enterprise edition includes comprehensive support for multiple AI providers with detailed documentation:
+
+#### Supported AI Providers
+
+| Provider | Tool Calling | Streaming | Multi-Modal | Status |
+|----------|-------------|-----------|-------------|--------|
+| AWS Bedrock (Claude) | ✅ Full | ✅ Yes | ✅ Yes | Production |
+| AWS Bedrock (Llama 3) | ✅ Full | ✅ Yes | ❌ No | Production |
+| Mistral AI | ✅ Full | ✅ Yes | ❌ No | Production |
+| OpenAI (GPT-4) | ✅ Full | ✅ Yes | ✅ Yes | Production |
+| OpenAI (GPT-3.5) | ✅ Full | ✅ Yes | ❌ No | Production |
+| Anthropic Claude | ✅ Full | ✅ Yes | ✅ Yes | Production |
+| Google Gemini | ⚠️ Partial | ✅ Yes | ✅ Yes | Beta |
+| Custom Providers | 🔧 Extensible | 🔧 Extensible | 🔧 Extensible | Framework |
 
 #### AWS Bedrock Tool Calling Support
 - **OpenAI-Compatible Tool Definitions**: Pass OpenAI-style tool/function definitions
 - **Automatic Format Conversion**: Converts between OpenAI and Bedrock tool formats
-- **Tool Name Sanitization**: Ensures tool names comply with Bedrock requirements
+- **Tool Name Sanitization**: Ensures tool names comply with Bedrock requirements (alphanumeric + underscores)
 - **Multi-Turn Conversations**: Full support for tool use and tool result messages
+- **Supported Models**: Claude 3 (Opus, Sonnet, Haiku), Llama 3, Command R, Titan
 
 **Implementation Details:**
 - `drivers/ai-provider/bedrock/bedrock.go`: Enhanced request conversion with tool support
@@ -162,6 +202,7 @@ This fork includes significant enhancements for multiple AI providers:
 - **Enhanced Debugging**: Detailed logging for tool call detection and execution
 - **Accurate Metrics**: Token usage tracking from Mistral API response
 - **Backward Compatible**: Non-tool requests work exactly as before
+- **Supported Models**: mistral-large, mistral-medium, mistral-small, mixtral-8x7b
 
 **Implementation Details:**
 - `drivers/ai-provider/mistralai/mistralai.go`: Custom converter with tool calling support
@@ -169,6 +210,30 @@ This fork includes significant enhancements for multiple AI providers:
 - Custom `ResponseConvert()` method parses tool_calls from Mistral responses
 - See [BUILD_INSTRUCTIONS.md](./BUILD_INSTRUCTIONS.md) for build and deployment guide
 - See [MISTRAL_TOOL_CALLING_IMPLEMENTATION.md](./MISTRAL_TOOL_CALLING_IMPLEMENTATION.md) for implementation details
+
+#### Universal Tool Calling Interface
+
+All supported providers implement a consistent OpenAI-compatible tool calling interface:
+
+```json
+{
+  "model": "provider/model-name",
+  "messages": [...],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "Get current weather",
+        "parameters": { ... }
+      }
+    }
+  ],
+  "tool_choice": "auto"
+}
+```
+
+The gateway automatically handles provider-specific conversions while maintaining API compatibility.
 
 ### Container Images
 
