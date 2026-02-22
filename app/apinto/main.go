@@ -34,6 +34,12 @@ func init() {
 
 func main() {
 
+	// ── NEW: Print startup banner to stderr before anything else ──
+	// This prints version, git SHA, build time, hostname, PID, and GOMAXPROCS
+	// directly to stderr (bypassing the eosc file logger) so it always appears
+	// in kubectl logs even if the file logger deadlocks.
+	version.LogStartupBanner()
+
 	if process.Run() {
 		log.Close()
 		return
