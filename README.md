@@ -47,7 +47,12 @@ This specialized version includes native support for leading AI providers with f
 - **Independent Deployment**: Apinto deployed as separate Helm release without impacting other services
 - **Automated CI/CD**: Full pipeline automation from code commit to Kubernetes deployment
 - **High Availability**: StatefulSet-based deployment with persistent storage
-- **Security**: Non-root container execution, AWS Secrets Manager integration
+- **Security Hardening**:
+  - Non-root container execution (UID 1000)
+  - Pod Security Context with restricted capabilities
+  - Proper volume permissions for logs and runtime files
+  - AWS Secrets Manager integration
+  - Drop all capabilities and disable privilege escalation
 
 ---
 
@@ -234,6 +239,37 @@ All supported providers implement a consistent OpenAI-compatible tool calling in
 ```
 
 The gateway automatically handles provider-specific conversions while maintaining API compatibility.
+
+### Security Features
+
+This enterprise edition includes comprehensive security hardening for production deployments:
+
+#### Non-Root User Execution
+- **Container User**: Runs as dedicated `apinto` user (UID 1000, GID 1000)
+- **No Root Required**: All operations execute with minimal privileges
+- **Dockerfile Changes**: User creation and ownership management in [build/cmd/Dockerfile](build/cmd/Dockerfile)
+- **Breaking Change**: Container no longer runs as root (changed from UID 0 to UID 1000)
+
+#### Kubernetes Security Context
+- **Pod-Level Security**:
+  - `runAsNonRoot: true` - Prevents escalation to root
+  - `fsGroup: 1000` - Ensures correct file system permissions
+- **Container-Level Security**:
+  - `allowPrivilegeEscalation: false` - Prevents privilege escalation
+  - `capabilities.drop: [ALL]` - Removes all Linux capabilities
+  - `readOnlyRootFilesystem: false` - Allows runtime writes to designated volumes
+
+#### Volume Permissions
+- **/var/lib/apinto**: Persistent data storage with proper ownership
+- **/var/log/apinto**: Log directory with emptyDir volume for non-root writes
+- **/var/run/apinto**: Runtime PID files with emptyDir volume for non-root writes
+- **/etc/apinto**: Configuration directory with proper read permissions
+
+#### Implementation Details
+Key commits implementing non-root user support:
+- [5c14cd8](https://github.com/sagarkolli249/apinto/commit/5c14cd8) - Initial non-root user support with PodSecurityContext
+- [29d798e](https://github.com/sagarkolli249/apinto/commit/29d798e) - Log volume mount for non-root writes
+- [e8f22e0](https://github.com/sagarkolli249/apinto/commit/e8f22e0) - Runtime PID file volume mount
 
 ### Container Images
 
